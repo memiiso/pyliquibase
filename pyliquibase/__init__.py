@@ -23,6 +23,22 @@ logger.addHandler(handler)
 class Liquibase(object):
 
     def __init__(self, changeLogFile, username, password, url, driver, **kwargs):
+        
+        """
+        :param changeLogFile=<path and filename> <required>	The changelog file to use.
+        :param username=<value> <required>	Database username.
+        :param password=<value> <required>	Database password.
+        :param url=<value> <required>	Database JDBC URL.
+        :param driver=<jdbc.driver.Class> <required>
+
+        :param referenceDriver: oracle.jdbc.OracleDriver
+        :param referenceUrl: jdbc:oracle:thin:@192.168.0.22:1521/orcl
+        :param referencePassword: password
+        :param liquibaseProLicenseKey: aeioufakekey32aeioufakekey785463214
+        :param classpath: ../path/to/file/ojdbc6-11.2.0.3.0.jar
+        :param defaultSchemaName=<schema>
+        :param defaultsFile=</path/to/file>
+        """
 
         self.changeLogFile = changeLogFile
         self.username = username
@@ -70,31 +86,13 @@ class Liquibase(object):
             logger.info(line.strip())
             if not line: break
         rc = process.wait()
-        if rc is not 0:
+        if rc != 0:
             raise Exception("Liquibase command failed (Process: %s)\n return code: %s" % (
                 str(process.pid), str(rc)))
         return output
 
 
 class Pyliquibase(Liquibase):
-    def __init__(self, changeLogFile, username, password, url, driver, **kwargs):
-        """
-        :param changeLogFile=<path and filename> <required>	The changelog file to use.
-        :param username=<value> <required>	Database username.
-        :param password=<value> <required>	Database password.
-        :param url=<value> <required>	Database JDBC URL.
-        :param driver=<jdbc.driver.Class> <required>
-
-        :param referenceDriver: oracle.jdbc.OracleDriver
-        :param referenceUrl: jdbc:oracle:thin:@192.168.0.22:1521/orcl
-        :param referencePassword: password
-        :param liquibaseProLicenseKey: aeioufakekey32aeioufakekey785463214
-        :param classpath: ../path/to/file/ojdbc6-11.2.0.3.0.jar
-        :param defaultSchemaName=<schema>
-        :param defaultsFile=</path/to/file>
-        """
-
-        super().__init__(changeLogFile, username, password, url, driver, **kwargs)
 
     @classmethod
     def from_file(cls, defaultsFile):
