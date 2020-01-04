@@ -1,0 +1,2 @@
+recursive-include pyliquibase/liquibase *
+recursive-include pyliquibase/jdbc-drivers *
