@@ -97,8 +97,10 @@ class Pyliquibase(Liquibase):
     @classmethod
     def from_file(cls, defaultsFile):
         properties = configparser.ConfigParser()
-        properties.read_string(pathlib.Path(os.path.expanduser(defaultsFile)).read_text())
-        return cls(**dict(properties.items()))
+        properties.optionxform = str
+        _string = "[%s]\n%s" % (properties.default_section,pathlib.Path(os.path.expanduser(defaultsFile)).read_text())
+        properties.read_string(string=_string)
+        return cls(**dict(properties.items(section=properties.default_section)))
 
     def update(self):
         logger.info("Executing liquibase update")
