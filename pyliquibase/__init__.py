@@ -23,7 +23,7 @@ logger.addHandler(handler)
 class Liquibase(object):
 
     def __init__(self, changeLogFile, username, password, url, driver, **kwargs):
-        
+
         """
         :param changeLogFile=<path and filename> <required>	The changelog file to use.
         :param username=<value> <required>	Database username.
@@ -50,8 +50,8 @@ class Liquibase(object):
     @property
     def _liquibase_cmd(self):
         cp = "%s:%s:%s" % (resource_filename(__package__, "liquibase/liquibase.jar"),
-                                resource_filename(__package__, "liquibase/lib/*"),
-                                resource_filename(__package__, "jdbc-drivers/*"))
+                           resource_filename(__package__, "liquibase/lib/*"),
+                           resource_filename(__package__, "jdbc-drivers/*"))
         if "classpath" in self.params:
             cp = "%s:%s" % (cp, self.params["classpath"])
 
@@ -98,7 +98,7 @@ class Pyliquibase(Liquibase):
     def from_file(cls, defaultsFile):
         properties = configparser.ConfigParser()
         properties.optionxform = str
-        _string = "[%s]\n%s" % (properties.default_section,pathlib.Path(os.path.expanduser(defaultsFile)).read_text())
+        _string = "[%s]\n%s" % (properties.default_section, pathlib.Path(os.path.expanduser(defaultsFile)).read_text())
         properties.read_string(string=_string)
         return cls(**dict(properties.items(section=properties.default_section)))
 
