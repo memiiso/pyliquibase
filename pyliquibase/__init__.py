@@ -73,22 +73,23 @@ class Liquibase(object):
     def _execute(self, *args):
         command = "%s %s" % (self._liquibase_cmd, " ".join(args))
         logger.debug(command)
-        process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        output = ''
+        with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    universal_newlines=True,
                                    # FIx "Cannot find base path"
                                    cwd=os.path.dirname(self.changeLogFile)
-                                   )
-        logger.info("Liquibase command started with PID:%s" % process.pid)
-        output = ''
-        while True:
-            line = process.stdout.readline()
-            output += "%s\n" % (line.strip())
-            logger.info(line.strip())
-            if not line: break
-        rc = process.wait()
-        if rc != 0:
-            raise Exception("Liquibase command failed (Process: %s)\n return code: %s" % (
-                str(process.pid), str(rc)))
+                                   ) as process:
+            logger.info("Liquibase command started with PID:%s" % process.pid)
+            while True:
+                line = process.stdout.readline()
+                output += "%s\n" % (line.strip())
+                logger.info(line.strip())
+                if not line:
+                    break
+            rc = process.wait()
+            if rc != 0:
+                raise Exception("Liquibase command failed (Process: %s)\n return code: %s" % (
+                    str(process.pid), str(rc)))
         return output
 
 
