@@ -79,7 +79,7 @@ class Liquibase(object):
                                    # FIx "Cannot find base path"
                                    cwd=os.path.dirname(self.changeLogFile)
                                    ) as process:
-            logger.info("Liquibase command started with PID:%s" % process.pid)
+            logger.debug("Liquibase command started with PID:%s" % process.pid)
             while True:
                 line = process.stdout.readline()
                 output += "%s\n" % (line.strip())
@@ -104,25 +104,25 @@ class Pyliquibase(Liquibase):
         return cls(**dict(properties.items(section=properties.default_section)))
 
     def update(self):
-        logger.info("Executing liquibase update")
+        logger.debug("Executing liquibase update")
         return self._execute("update")
 
     def updateSQL(self):
-        logger.info("Executing liquibase updateSQL")
+        logger.debug("Executing liquibase updateSQL")
         return self._execute("updateSQL")
 
     def validate(self):
-        logger.info("Executing liquibase validate")
+        logger.debug("Executing liquibase validate")
         return self._execute("validate")
 
     def status(self):
-        logger.info("Executing liquibase status")
+        logger.debug("Executing liquibase status")
         return self._execute("status")
 
     def rollback(self, tag):
-        logger.info("Rolling back to tag:%s" % tag)
+        logger.debug("Rolling back to tag:%s" % tag)
         return self._execute("rollback", tag)
 
     def rollback_to_datetime(self, datetime):
-        logger.info("Rolling back to %s" % str(datetime))
+        logger.debug("Rolling back to %s" % str(datetime))
         return self._execute("rollbackToDate", datetime)
