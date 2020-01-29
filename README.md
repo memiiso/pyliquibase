@@ -6,7 +6,7 @@ Liquibase version : 3.8.4
 ## Installation
 
 ```python
-pip install https://github.com/memiiso/pyliquibase/archive/master.zip
+pip install https://github.com/memiiso/pyliquibase/archive/master.zip --upgrade --user
 ```
 
 ## Usage
