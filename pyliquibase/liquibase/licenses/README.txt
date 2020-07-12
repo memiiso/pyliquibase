@@ -1,5 +1,5 @@
 Liquibase License Information
-Version: 3.10.0
+Version: 4.0.0-beta2
 
 Liquibase ships with 3rd party components using the following licenses:
 
