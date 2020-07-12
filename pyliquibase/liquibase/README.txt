@@ -1,8 +1,8 @@
-Liquibase Version 3.10.0
+Liquibase Version 3.10.1
 
 Introduction
 --------------------------------------------
-Thanks for downloading and installing Liquibase 3.10.0 from Datical.
+Thanks for downloading and installing Liquibase 3.10.1 from Datical.
 By using the installer, you already have all the dependencies, directories, config, 
 and properties files to get started exploring the Liquibase examples provided.
 
