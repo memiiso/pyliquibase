@@ -1,3 +1,5 @@
+![Python package](https://github.com/memiiso/pyliquibase/workflows/Python%20package/badge.svg)
+
 # pyliquibase
 
 Python wrapper for [liquibase](http://www.liquibase.org/). 
