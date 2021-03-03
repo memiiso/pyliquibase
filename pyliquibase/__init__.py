@@ -88,8 +88,8 @@ class Liquibase(object):
                     break
             rc = process.wait()
             if rc != 0:
-                raise Exception("Liquibase command failed (Process: %s)\n return code: %s" % (
-                    str(process.pid), str(rc)))
+                raise Exception("Liquibase command failed, Process: %s Return code: %s \nOutput:%s" % (
+                    str(process.pid), str(rc), str(output)))
         return output
 
 
