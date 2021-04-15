@@ -1,5 +1,5 @@
 Liquibase License Information
-Version: 4.0.0-beta2
+Version: 4.3.3
 
 Liquibase ships with 3rd party components using the following licenses:
 
@@ -79,17 +79,12 @@ CPL 1.0 License
 
 Eclipse Public License 1.0
 - h2.jar
-- logback-classic.jar
-- logback-core.jar
 
 ISC License
 - logkit:logkit
 
 LGPL-3.0 license
 - org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec
-
-MIT license
-- slf4j.jar
 
 Plexus Classworlds License
 - classworlds:classworlds
