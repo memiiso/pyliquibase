@@ -6,7 +6,7 @@ os.chdir(setup_py_dir)
 
 setup(
     name='pyliquibase',
-    version='1.0.0',
+    version='1.1.0',
     packages=find_packages(),
     author='Memiiso',
     description='Python liquibase Wrapper',
