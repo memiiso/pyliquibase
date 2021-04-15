@@ -56,6 +56,9 @@ class Liquibase(object):
         if "classpath" in self.params:
             cp = "%s:%s" % (cp, self.params["classpath"])
 
+        # enable old behaviour
+        cp = "%s:%s" % (cp, "/")
+
         command.append("java")
         command.append("-cp")
         command.append(cp)
@@ -69,7 +72,7 @@ class Liquibase(object):
 
         command.append('--driver=%s' % (self.driver))
         if self.logLevel:
-            command.append('--logLevel="%s"' % (self.logLevel))
+            command.append('--logLevel=%s' % (self.logLevel))
         command.append('--url=%s' % (self.url))
         command.append('--username=%s' % (self.username))
         command.append('--password=%s' % (self.password))

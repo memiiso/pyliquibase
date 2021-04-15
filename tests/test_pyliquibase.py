@@ -19,15 +19,14 @@ class TestPyliquibase(TestCase):
         self.tearDowndb()
         changeLogFile = os.path.dirname(os.path.realpath(__file__)) + '/resources/changelog.xml'
         lb = Pyliquibase(changeLogFile=changeLogFile, username="", password="", url='jdbc:sqlite:%s' % self.testdb,
-                         driver="org.sqlite.JDBC", logLevel="info")
+                         driver="org.sqlite.JDBC", logLevel="debug")
 
         rc = lb.status()
         self.assertTrue("2 change sets have not been applied" in rc)
         rc = lb.validate()
         self.assertTrue("No validation errors found" in rc)
-        rc = lb.update()
+        rc = lb.updateSQL()
         self.assertTrue("001_patch.sql" in rc)
-        self.assertTrue("Custom SQL executed" in rc)
         rc = lb.update()
         self.assertTrue("Liquibase: Update has been successful" in rc)
 
@@ -41,9 +40,8 @@ class TestPyliquibase(TestCase):
         self.assertTrue("2 change sets have not been applied" in rc)
         rc = lb.validate()
         self.assertTrue("No validation errors found" in rc)
-        rc = lb.update()
+        rc = lb.updateSQL()
         self.assertTrue("001_patch.sql" in rc)
-        self.assertTrue("Custom SQL executed" in rc)
         rc = lb.update()
         self.assertTrue("Liquibase: Update has been successful" in rc)
 
@@ -55,8 +53,7 @@ class TestPyliquibase(TestCase):
         self.assertTrue("2 change sets have not been applied" in rc)
         rc = lb.validate()
         self.assertTrue("No validation errors found" in rc)
-        rc = lb.update()
+        rc = lb.updateSQL()
         self.assertTrue("001_patch.sql" in rc)
-        self.assertTrue("Custom SQL executed" in rc)
         rc = lb.update()
         self.assertTrue("Liquibase: Update has been successful" in rc)
