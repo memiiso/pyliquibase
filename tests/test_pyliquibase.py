@@ -49,7 +49,7 @@ class TestPyliquibase(TestCase):
 
     def test_from_defaults_file(self):
         changeLogFile = os.path.dirname(os.path.realpath(__file__)) + '/resources/changelog-2.xml'
-        lb = Pyliquibase.from_file(defaultsFile="./resources/liquibase.properties")
+        lb = Pyliquibase.from_file(defaultsFile=os.path.dirname(os.path.realpath(__file__)) +"/resources/liquibase.properties")
         lb.changeLogFile = changeLogFile
         rc = lb.status()
         self.assertTrue("2 change sets have not been applied" in rc)
