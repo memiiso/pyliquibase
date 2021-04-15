@@ -5,7 +5,6 @@ import configparser
 import logging
 import os
 import pathlib
-import shlex
 import subprocess
 import sys
 
@@ -48,49 +47,59 @@ class Liquibase(object):
         self.params = kwargs
 
     @property
-    def _liquibase_cmd(self):
+    def _liquibase_cmd(self) -> list:
+        command = []
         cp = "%s:%s:%s" % (resource_filename(__package__, "liquibase/liquibase.jar"),
                            resource_filename(__package__, "liquibase/lib/*"),
                            resource_filename(__package__, "jdbc-drivers/*"))
         if "classpath" in self.params:
             cp = "%s:%s" % (cp, self.params["classpath"])
 
-        cmd = "java -cp '%s' liquibase.integration.commandline.Main" % cp
-        cmd = '%s --driver=%s' % (cmd, self.driver)
-        cmd = '%s --url=%s' % (cmd, self.url)
-        cmd = '%s --username=%s' % (cmd, self.username)
-        cmd = '%s --password=%s' % (cmd, self.password)
-        cmd = '%s --changeLogFile=%s' % (cmd, self.changeLogFile)
+        command.append("java")
+        command.append("-cp")
+        command.append(cp)
+        command.append("liquibase.integration.commandline.Main")
 
         for key, value in self.params.items():
             if key.startswith("-D") or key.startswith("--"):
-                cmd = '%s %s=%s' % (cmd, key, value)
+                command.append('%s=%s' % (key, value))
             else:
-                cmd = '%s --%s=%s' % (cmd, key, value)
+                command.append('--%s=%s' % (key, value))
 
-        return cmd
+        command.append('--driver=%s' % (self.driver))
+        command.append('--url=%s' % (self.url))
+        command.append('--username=%s' % (self.username))
+        command.append('--password=%s' % (self.password))
+        command.append('--changeLogFile=%s' % (self.changeLogFile))
 
-    def _execute(self, *args):
-        command = "%s %s" % (self._liquibase_cmd, " ".join(args))
+        return command
+
+    def _execute(self, *args) -> str:
+        _output = ""
+        command = self._liquibase_cmd + list(args)
         logger.debug(command)
-        output = ''
-        with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   universal_newlines=True,
-                                   # FIx "Cannot find base path"
-                                   cwd=os.path.dirname(self.changeLogFile)
-                                   ) as process:
+        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              universal_newlines=True,
+                              # FIx "Cannot find base path"
+                              cwd=os.path.dirname(self.changeLogFile)
+                              ) as process:
             logger.debug("Liquibase command started with PID:%s" % process.pid)
-            while True:
-                line = process.stdout.readline()
-                output += "%s\n" % (line.strip())
-                logger.info(line.strip())
-                if not line:
-                    break
-            rc = process.wait()
-            if rc != 0:
-                raise Exception("Liquibase command failed, Process: %s Return code: %s \nOutput:%s" % (
-                    str(process.pid), str(rc), str(output)))
-        return output
+            for line in process.stdout:
+                if line:
+                    logger.info(line.strip())
+                    _output += line.strip() + "\n"
+
+        if process.returncode != 0:
+            _args = []
+            # remove password
+            for x in process.args:
+                if "--password" in str(x):
+                    _args.append("--password=***")
+                else:
+                    _args.append(x)
+            raise subprocess.CalledProcessError(process.returncode, _args)
+
+        return _output
 
 
 class Pyliquibase(Liquibase):
