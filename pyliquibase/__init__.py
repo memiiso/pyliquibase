@@ -56,6 +56,7 @@ class Liquibase(object):
         if "classpath" in self.params:
             cp = "%s:%s" % (cp, self.params["classpath"])
 
+        # enable old behaviour
         cp = "%s:%s" % (cp, "/")
 
         command.append("java")
