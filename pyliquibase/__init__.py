@@ -11,7 +11,7 @@ import sys
 from pkg_resources import resource_filename
 
 logger = logging.getLogger(name="pyliquibase")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -21,7 +21,7 @@ logger.addHandler(handler)
 
 class Liquibase(object):
 
-    def __init__(self, changeLogFile, username, password, url, driver, **kwargs):
+    def __init__(self, changeLogFile, username, password, url, driver, logLevel=None, **kwargs):
 
         """
         :param changeLogFile=<path and filename> <required>	The changelog file to use.
@@ -45,6 +45,7 @@ class Liquibase(object):
         self.url = url
         self.driver = driver
         self.params = kwargs
+        self.logLevel = logLevel
 
     @property
     def _liquibase_cmd(self) -> list:
@@ -67,6 +68,8 @@ class Liquibase(object):
                 command.append('--%s=%s' % (key, value))
 
         command.append('--driver=%s' % (self.driver))
+        if self.logLevel:
+            command.append('--logLevel="%s"' % (self.logLevel))
         command.append('--url=%s' % (self.url))
         command.append('--username=%s' % (self.username))
         command.append('--password=%s' % (self.password))
