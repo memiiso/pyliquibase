@@ -69,7 +69,7 @@ class Liquibase(object):
 
         command.append('--driver=%s' % (self.driver))
         if self.logLevel:
-            command.append('--logLevel="%s"' % (self.logLevel))
+            command.append('--logLevel=%s' % (self.logLevel))
         command.append('--url=%s' % (self.url))
         command.append('--username=%s' % (self.username))
         command.append('--password=%s' % (self.password))
