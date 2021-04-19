@@ -100,7 +100,7 @@ class Liquibase(object):
                     _args.append("--password=***")
                 else:
                     _args.append(x)
-            raise subprocess.CalledProcessError(process.returncode, _args)
+            raise subprocess.CalledProcessError(process.returncode, _args, output=_output, stderr=process.stderr)
 
         return _output
 
