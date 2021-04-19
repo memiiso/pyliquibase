@@ -57,3 +57,14 @@ class TestPyliquibase(TestCase):
         self.assertTrue("001_patch.sql" in rc)
         rc = lb.update()
         self.assertTrue("Liquibase: Update has been successful" in rc)
+
+
+    def test_exception(self):
+        changeLogFile = os.path.dirname(os.path.realpath(__file__)) + '/resources/changelog-2.xml'
+        lb = Pyliquibase(changeLogFile=changeLogFile, username="", password="", url='jdbc:mysql:notexists',
+                         driver="org.sqlite.JDBC", logLevel="info")
+        lb.changeLogFile = changeLogFile
+        try:
+            rc = lb.status()
+        except Exception as e:
+            self.assertTrue("Connection could not be created to jdbc:mysql" in str(e.stdout))
