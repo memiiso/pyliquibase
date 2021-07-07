@@ -1,4 +1,10 @@
 
+run.sh
+tests/test_bigquery.py
+tests/resources/bigquery
+tests/resources/bigquery.properties
+tests/resources/bigquery.xml
+
 build
 dist
 *.egg-info
@@ -98,7 +104,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -e
 # build and test
 python3 --version
 python3 -m pip install coverage pylint pytest

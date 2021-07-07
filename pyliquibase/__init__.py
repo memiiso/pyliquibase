@@ -21,7 +21,9 @@ logger.addHandler(handler)
 
 class Liquibase(object):
 
-    def __init__(self, changeLogFile, username, password, url, driver, logLevel=None, **kwargs):
+    def __init__(self, changeLogFile=None, username=None, password=None, url=None, driver=None, logLevel=None,
+                 defaultsFile=None,
+                 liquibaseHubMode="off", **kwargs):
 
         """
         :param changeLogFile=<path and filename> <required>	The changelog file to use.
@@ -39,6 +41,11 @@ class Liquibase(object):
         :param defaultsFile=</path/to/file>
         """
 
+        if defaultsFile is None and (
+                changeLogFile is None or username is None or password is None or url is None or driver is None):
+            raise Exception("Please provide defaultsFile or {changeLogFile, username, password, url, driver} arguments")
+
+        self.liquibaseHubMode = liquibaseHubMode
         self.changeLogFile = changeLogFile
         self.username = username
         self.password = password
@@ -46,23 +53,28 @@ class Liquibase(object):
         self.driver = driver
         self.params = kwargs
         self.logLevel = logLevel
+        self.defaultsFile = defaultsFile
 
     @property
     def _liquibase_cmd(self) -> list:
         command = []
-        cp = "%s:%s:%s" % (resource_filename(__package__, "liquibase/liquibase.jar"),
-                           resource_filename(__package__, "liquibase/lib/*"),
-                           resource_filename(__package__, "jdbc-drivers/*"))
+        logger.info("Working dir is %s" % os.getcwd())
+        cp = "%s:%s:%s:%s" % (os.getcwd()+"/",
+                              resource_filename(__package__, "liquibase/liquibase.jar"),
+                              resource_filename(__package__, "liquibase/lib/*"),
+                              resource_filename(__package__, "jdbc-drivers/*"))
         if "classpath" in self.params:
             cp = "%s:%s" % (cp, self.params["classpath"])
-
-        # enable old behaviour
-        cp = "%s:%s" % (cp, "/")
 
         command.append("java")
         command.append("-cp")
         command.append(cp)
-        command.append("liquibase.integration.commandline.Main")
+        command.append("liquibase.integration.commandline.LiquibaseCommandLine")
+
+        if self.defaultsFile:
+            command.append('%s=%s' % ("--defaultsFile", self.defaultsFile))
+            command.append('--liquibaseHubMode=%s' % (self.liquibaseHubMode))
+            return command
 
         for key, value in self.params.items():
             if key.startswith("-D") or key.startswith("--"):
@@ -77,6 +89,7 @@ class Liquibase(object):
         command.append('--username=%s' % (self.username))
         command.append('--password=%s' % (self.password))
         command.append('--changeLogFile=%s' % (self.changeLogFile))
+        command.append('--liquibaseHubMode=%s' % (self.liquibaseHubMode))
 
         return command
 
@@ -84,26 +97,22 @@ class Liquibase(object):
         _output = ""
         command = self._liquibase_cmd + list(args)
         logger.debug(command)
-        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              universal_newlines=True,
-                              # FIx "Cannot find base path"
-                              cwd=os.path.dirname(self.changeLogFile)
-                              ) as process:
-            logger.debug("Liquibase command started with PID:%s" % process.pid)
-            for line in process.stdout:
+        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1,
+                              universal_newlines=True, shell=False) as p:
+            for line in p.stdout:
                 if line:
-                    logger.info(line.strip())
+                    print(line.strip())
                     _output += line.strip() + "\n"
 
-        if process.returncode != 0:
+        if p.returncode != 0:
             _args = []
             # remove password
-            for x in process.args:
+            for x in p.args:
                 if "--password" in str(x):
                     _args.append("--password=***")
                 else:
                     _args.append(x)
-            raise subprocess.CalledProcessError(process.returncode, _args, output=_output, stderr=process.stderr)
+            raise subprocess.CalledProcessError(p.returncode, p.args, output=_output, stderr=p.stderr)
 
         return _output
 
@@ -116,7 +125,15 @@ class Pyliquibase(Liquibase):
         properties.optionxform = str
         _string = "[%s]\n%s" % (properties.default_section, pathlib.Path(os.path.expanduser(defaultsFile)).read_text())
         properties.read_string(string=_string)
-        return cls(**dict(properties.items(section=properties.default_section)))
+        return cls(
+            changeLogFile=properties.get(properties.default_section, "changeLogFile"),
+            username=properties.get(properties.default_section, "username"),
+            password=properties.get(properties.default_section, "password"),
+            url=properties.get(properties.default_section, "url"),
+            driver=properties.get(properties.default_section, "driver"),
+            logLevel=properties.get(properties.default_section, "logLevel", fallback=None),
+            liquibaseHubMode=properties.get(properties.default_section, "liquibaseHubMode", fallback="off"),
+            defaultsFile=defaultsFile)
 
     def update(self):
         logger.debug("Executing liquibase update")
