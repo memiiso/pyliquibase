@@ -9,7 +9,6 @@ class TestPyliquibase(TestCase):
     def setUp(self):
         self.dir_test = pathlib.Path(__file__).parent
         self.testdb = self.dir_test.as_posix() + 'testdb'
-        os.chdir(self.dir_test.as_posix())
 
     def tearDown(self):
         self.tearDowndb()
