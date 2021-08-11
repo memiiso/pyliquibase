@@ -1,5 +1,5 @@
 Liquibase License Information
-Version: 4.3.3
+Version: 4.4.3
 
 Liquibase ships with 3rd party components using the following licenses:
 
@@ -17,7 +17,6 @@ Libraries and their licenses:
 
 Apache 2.0 License
 - avalon-framework:avalon-framework
-- commons-cli:commons-cli
 - commons-logging:commons-logging
 - doxia:doxia-sink-api
 - javax.enterprise:cdi-api
@@ -58,7 +57,6 @@ Apache 2.0 License
 - org.liquibase:liquibase-parent
 - org.springframework:spring
 - org.yaml:snakeyaml
-- commons-cli.jar
 - snakeyaml.jar
 
 BSD 2 Clause License
