@@ -6,7 +6,7 @@ os.chdir(setup_py_dir)
 
 setup(
     name='pyliquibase',
-    version='1.1.0',
+    version='2.0.0',
     packages=find_packages(),
     author='Memiiso',
     description='Python liquibase Wrapper',
@@ -14,6 +14,6 @@ setup(
     download_url='https://github.com/memiiso/pyliquibase/archive/master.zip',
     include_package_data=True,
     test_suite='tests',
-    install_requires=[],
+    install_requires=["pyjnius==1.4.0"],
     python_requires='>=3',
 )

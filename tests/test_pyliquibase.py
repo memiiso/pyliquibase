@@ -9,63 +9,38 @@ class TestPyliquibase(TestCase):
     def setUp(self):
         self.dir_test = pathlib.Path(__file__).parent
         self.testdb = self.dir_test.as_posix() + 'testdb'
+        self.testlogfile = self.dir_test.joinpath('liquibase.log')
         os.chdir(self.dir_test.as_posix())
 
     def tearDown(self):
-        self.tearDowndb()
-
-    def tearDowndb(self):
         if os.path.exists(self.testdb):
             os.remove(self.testdb)
 
+        self._delete_testlogfile()
+
+    def _get_liquibase_log(self) -> str:
+        return self.testlogfile.read_text()
+
+    def _delete_testlogfile(self):
+        if self.testlogfile.exists():
+            self.testlogfile.unlink()
+
     def test_update(self):
-        self.tearDowndb()
-        changeLogFile = 'resources/changelog.xml'
-        lb = Pyliquibase(changeLogFile=changeLogFile, username="", password="", url='jdbc:sqlite:%s' % self.testdb,
-                         driver="org.sqlite.JDBC", logLevel="info")
+        self.tearDown()
+        lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
 
-        rc = lb.status()
-        self.assertTrue("2 change sets have not been applied" in rc)
-        rc = lb.validate()
-        self.assertTrue("No validation errors found" in rc)
-        rc = lb.updateSQL()
-        self.assertTrue("001_patch.sql" in rc)
-        rc = lb.update()
-        self.assertTrue("Liquibase command 'update' was executed successfully" in rc)
+        lb.addarg("--log-level", "info")
+        lb.addarg("--log-file", self.testlogfile.as_posix())
 
-    def test_nested_dir(self):
-        self.tearDowndb()
-        changeLogFile = 'resources/changelog-2.xml'
-        lb = Pyliquibase(changeLogFile=changeLogFile, username="", password="", url='jdbc:sqlite:%s' % self.testdb,
-                         driver="org.sqlite.JDBC", logLevel="info")
-
-        rc = lb.status()
-        self.assertTrue("2 change sets have not been applied" in rc)
-        rc = lb.validate()
-        self.assertTrue("No validation errors found" in rc)
-        rc = lb.updateSQL()
-        self.assertTrue("001_patch.sql" in rc)
-        rc = lb.update()
-        self.assertTrue("Liquibase command 'update' was executed successfully" in rc)
-
-    def test_from_defaults_file(self):
-        lb = Pyliquibase.from_file(
-            defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
-        rc = lb.status()
-        self.assertTrue("2 change sets have not been applied" in rc)
-        rc = lb.validate()
-        self.assertTrue("No validation errors found" in rc)
-        rc = lb.updateSQL()
-        self.assertTrue("001_patch.sql" in rc)
-        rc = lb.update()
-        self.assertTrue("ChangeSet resources/changelog-2/002_patch.sql::1::liqubasetest ran successfully" in rc)
+        lb.status()
+        lb.execute("validate")
+        lb.execute("updateSQL")
+        lb.execute("update")
 
     def test_exception(self):
-        changeLogFile = 'resources/changelog-2.xml'
-        lb = Pyliquibase(changeLogFile=changeLogFile, username="", password="", url='jdbc:mysql:notexists',
-                         driver="org.sqlite.JDBC", logLevel="info")
-        lb.changeLogFile = changeLogFile
+        lb = Pyliquibase(
+            defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase-fail.properties")
         try:
-            rc = lb.status()
+            lb.status()
         except Exception as e:
-            self.assertTrue("Connection could not be created to" in str(e.stdout))
+            self.assertTrue("Liquibase execution failed" in str(e))
