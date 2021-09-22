@@ -31,8 +31,9 @@ if __name__ == '__main__':
 
 ## Python Java Integration
 Python library is using `LiquibaseCommandLine` reflection class which uses/equivalent `LiquibaseCommandLine` java class.
-liquibase calls are executed by `LiquibaseCommandLine.execute(liquibaseargs)` method by passing given arguments.
+liquibase calls are executed by `LiquibaseCommandLine.execute(liquibaseargs)` method by passing given python arguments to java class.
 
+python java integration class using pyjnius(using the Java Native Interface (JNI))
 ```python
 class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
     __javaclass__ = 'liquibase/integration/commandline/LiquibaseCommandLine'
