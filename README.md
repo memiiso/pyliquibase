@@ -40,3 +40,5 @@ class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
     # methods
     execute = JavaMethod('([Ljava/lang/String;)I')
 ```
+
+LIQUIBASE is a registered trademark of [Liquibase](https://www.liquibase.com) , INC.
