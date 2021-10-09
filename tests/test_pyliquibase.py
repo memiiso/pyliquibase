@@ -36,6 +36,7 @@ class TestPyliquibase(TestCase):
         lb.execute("validate")
         lb.execute("updateSQL")
         lb.execute("update")
+        self.assertTrue(True)
 
     def test_exception(self):
         lb = Pyliquibase(
