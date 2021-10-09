@@ -14,7 +14,7 @@ rm "liquibase-${LBVERSION}.zip"
 # pull in extensions
 rm -rf ${DIR}/pyliquibase/jdbc-drivers/liquibase-redshift*
 wget "https://github.com/liquibase/liquibase-redshift/releases/download/liquibase-redshift-${LBVERSION}/liquibase-redshift-${LBVERSION}.jar"  -O "${DIR}/pyliquibase/jdbc-drivers/liquibase-redshift-${LBVERSION}.jar"
-rm -rf ${DIR}/pyliquibase/jdbc-drivers/liquibase-redshift*
+rm -rf ${DIR}/pyliquibase/jdbc-drivers/liquibase-bigquery*
 wget "https://github.com/liquibase/liquibase-bigquery/releases/download/liquibase-bigquery-${LBVERSION}/liquibase-bigquery-${LBVERSION}.jar"  -O "${DIR}/pyliquibase/jdbc-drivers/liquibase-bigquery-${LBVERSION}.jar"
 
 # commit to git
