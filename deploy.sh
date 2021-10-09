@@ -9,3 +9,5 @@ python3 setup.py -q install --user
 python3 -m coverage report -m ./pyliquibase/*.py setup.py
 python3 -m coverage run --source=./tests/ -m unittest discover -s tests/
 python3 -m pylint pyliquibase setup.py
+
+# @TODO pull in extensions
