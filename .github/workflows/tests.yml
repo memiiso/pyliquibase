@@ -41,3 +41,6 @@ jobs:
       - name: Test with Unittest
         run: |
           python3 -m coverage run --source=./tests/ -m unittest discover -s tests/
+          python3 setup.py -q install --user
+          cd tests
+          pyliquibase --defaultsFile=resources/liquibase.properties updateSQL
