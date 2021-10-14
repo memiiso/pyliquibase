@@ -8,7 +8,12 @@ os.chdir(setup_py_dir)
 
 setup(
     name='pyliquibase',
-    version='2.0.3',
+    entry_points={
+        'console_scripts': [
+            'pyliquibase = pyliquibase:main',
+        ],
+    },
+    version='2.0.4',
     packages=find_packages(),
     author="Memiiso Organization",
     description='Python liquibase',
