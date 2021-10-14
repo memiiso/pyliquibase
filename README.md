@@ -8,16 +8,31 @@ MySQL, Postgresql, Bigquery, Redshift JDBC Drivers included.
 
 ## Installation
 
-```python
+install:
+```shell
+pip install pyliquibase
+```
+
+install from github:
+```shell
 pip install https://github.com/memiiso/pyliquibase/archive/master.zip --upgrade --user
 ```
 
-## Example
+## How to Use
 
+using command line:
+```shell
+pyliquibase --defaultsFile=changelogs/liquibase.properties status
+pyliquibase --defaultsFile=changelogs/liquibase.properties validate
+pyliquibase --defaultsFile=changelogs/liquibase.properties updateSQL
+pyliquibase --defaultsFile=changelogs/liquibase.properties update
+```
+
+using python:
 ```python
 from pyliquibase import Pyliquibase
 if __name__ == '__main__':
-    liquibase = Pyliquibase(defaultsFile="resources/liquibase.properties", logLevel="INFO")
+    liquibase = Pyliquibase(defaultsFile="changelogs/liquibase.properties", logLevel="INFO")
     # call execute with arguments
     liquibase.execute("status")
     liquibase.execute("rollback", "MyTag")
