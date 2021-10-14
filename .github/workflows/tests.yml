@@ -42,4 +42,4 @@ jobs:
         run: |
           python3 -m coverage run --source=./tests/ -m unittest discover -s tests/
           cd tests
-          pyliquibase --defaultsFile=liquibase.properties updateSQL
+          pyliquibase --defaultsFile=resources/liquibase.properties updateSQL
