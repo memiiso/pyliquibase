@@ -1,5 +1,7 @@
+import argparse
 import logging
 import os
+import pathlib
 import sys
 
 #####  loggger
@@ -20,7 +22,11 @@ class Pyliquibase():
     def __init__(self, defaultsFile: str, liquibaseHubMode: str = "off", logLevel: str = None):
 
         self.args = []
+        log.warning("Current working dir is %s" % pathlib.Path.cwd())
         if defaultsFile:
+            if not pathlib.Path.cwd().joinpath(defaultsFile).is_file() and not pathlib.Path(defaultsFile).is_file():
+                raise FileNotFoundError("defaultsFile not found! %s" % defaultsFile)
+
             self.args.append("--defaults-file=%s" % defaultsFile)
 
         if liquibaseHubMode:
@@ -64,8 +70,8 @@ class Pyliquibase():
         if rc:
             raise Exception("Liquibase execution failed with exit code:%s" % rc)
 
-    def addarg(self, key:str, val):
-        _new_arg="%s=%s" % (key, val)
+    def addarg(self, key: str, val):
+        _new_arg = "%s=%s" % (key, val)
         self.args.append(_new_arg)
 
     def update(self):
@@ -87,3 +93,22 @@ class Pyliquibase():
     def rollback_to_datetime(self, datetime):
         log.debug("Rolling back to %s" % str(datetime))
         self.execute("rollbackToDate", datetime)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--defaultsFile', type=str, default="liquibase.properties",
+                        help='Relative path to liquibase.properties file'
+                        )
+    parser.add_argument('--liquibaseHubMode', type=str, default="off", help='liquibaseHubMode default "off"')
+    parser.add_argument('--logLevel', type=str, default=None, help='logLevel name')
+    _args, args = parser.parse_known_args()
+
+    pl = Pyliquibase(defaultsFile=_args.defaultsFile,
+                     liquibaseHubMode=_args.liquibaseHubMode,
+                     logLevel=_args.logLevel)
+    pl.execute(*args)
+
+
+if __name__ == '__main__':
+    main()
