@@ -12,7 +12,7 @@ setup(
     packages=find_packages(),
     author="Memiiso Organization",
     description='Python liquibase',
-    long_description=pathlib.Path(__file__).parent.joinpath("README.md").read_text(),
+    long_description=pathlib.Path(__file__).parent.joinpath("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
     url='https://github.com/memiiso/pyliquibase',
     download_url='https://github.com/memiiso/pyliquibase/archive/master.zip',
