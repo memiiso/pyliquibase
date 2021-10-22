@@ -22,7 +22,7 @@ setup(
     url='https://github.com/memiiso/pyliquibase',
     download_url='https://github.com/memiiso/pyliquibase/archive/master.zip',
     include_package_data=True,
-    license="GPL-3",
+    license="Apache License 2.0",
     test_suite='tests',
     install_requires=["pyjnius==1.4.0"],
     python_requires='>=3',
