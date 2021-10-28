@@ -42,14 +42,14 @@ class Pyliquibase():
         import jnius_config
         from pkg_resources import resource_filename
 
-        LIQUIBASE_CLASSPATH: list = [os.getcwd() + "/",
-                                     resource_filename(__package__, "liquibase/liquibase.jar"),
+        LIQUIBASE_CLASSPATH: list = [resource_filename(__package__, "liquibase/liquibase.jar"),
                                      resource_filename(__package__, "liquibase/lib/*"),
                                      resource_filename(__package__, "liquibase/lib/picocli*"),
                                      resource_filename(__package__, "jdbc-drivers/*")]
 
         if not jnius_config.vm_running:
             jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
+            log.debug("classpath: %s" % jnius_config.get_classpath())
         else:
             log.warning("VM is already running, can't set classpath/options")
             log.debug("VM started at" + jnius_config.vm_started_at)

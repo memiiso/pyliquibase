@@ -1,5 +1,5 @@
 
-run.sh
+run*.sh
 tests/test_bigquery.py
 tests/resources/bigquery
 tests/resources/bigquery.properties
