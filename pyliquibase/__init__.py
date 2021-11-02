@@ -65,7 +65,7 @@ class Pyliquibase():
         return LiquibaseCommandLine()
 
     def execute(self, *arguments: str):
-        log.debug("Executing liquibase %s" % arguments)
+        log.debug("Executing liquibase %s" % list(arguments))
         rc = self.cli.execute(self.args + list(arguments))
         if rc:
             raise Exception("Liquibase execution failed with exit code:%s" % rc)
