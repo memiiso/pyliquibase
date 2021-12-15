@@ -1,3 +1,5 @@
+[![License](http://img.shields.io/:license-apache%202.0-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)
 ![Python package](https://github.com/memiiso/pyliquibase/workflows/Python%20package/badge.svg)
 
 # pyliquibase
@@ -56,4 +58,11 @@ class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
     execute = JavaMethod('([Ljava/lang/String;)I')
 ```
 
+### Contributors
+<a href="https://github.com/memiiso/pyliquibase/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=memiiso/pyliquibase" />
+</a>
+
+
+##
 LIQUIBASE is a registered trademark of [Liquibase](https://www.liquibase.com) , INC.
