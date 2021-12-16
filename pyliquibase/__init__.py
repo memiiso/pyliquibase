@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import pathlib
 import sys
 
@@ -19,8 +18,15 @@ log.addHandler(handler)
 
 class Pyliquibase():
 
-    def __init__(self, defaultsFile: str, liquibaseHubMode: str = "off", logLevel: str = None):
+    def __init__(self, defaultsFile: str, liquibaseHubMode: str = "off", logLevel: str = None,
+                 additionalClasspath: str = None):
+        """
 
+        :param defaultsFile: pyliquibase defaults file
+        :param liquibaseHubMode: liquibase Hub Mode default: off
+        :param logLevel: liquibase log level
+        :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
+        """
         self.args = []
         log.warning("Current working dir is %s" % pathlib.Path.cwd())
         if defaultsFile:
@@ -35,6 +41,8 @@ class Pyliquibase():
         if logLevel:
             self.args.append("--log-level=%s" % logLevel)
 
+        self.additional_classpath: str = additionalClasspath
+
         self.cli = self._cli()
 
     def _cli(self):
@@ -46,6 +54,9 @@ class Pyliquibase():
                                      resource_filename(__package__, "liquibase/lib/*"),
                                      resource_filename(__package__, "liquibase/lib/picocli*"),
                                      resource_filename(__package__, "jdbc-drivers/*")]
+
+        if self.additional_classpath:
+            LIQUIBASE_CLASSPATH.append(self.additional_classpath)
 
         if not jnius_config.vm_running:
             jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
