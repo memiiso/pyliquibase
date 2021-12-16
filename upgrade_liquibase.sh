@@ -3,7 +3,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-LBVERSION="4.6.1"
+LBVERSION="4.6.2"
 LBFILE="liquibase-${LBVERSION}.zip"
 
 # download liquibase

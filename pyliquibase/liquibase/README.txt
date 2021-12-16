@@ -1,8 +1,8 @@
-Liquibase Version 4.6.1
+Liquibase Version 4.6.2
 
 Introduction
 --------------------------------------------
-Thanks for downloading and installing Liquibase 4.6.1 from Liquibase.
+Thanks for downloading and installing Liquibase 4.6.2 from Liquibase.
 By using the installer, you already have all the dependencies, directories, config, 
 and properties files to get started exploring the Liquibase examples provided.
 
