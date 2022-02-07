@@ -1,7 +1,12 @@
 import argparse
 import logging
+import os
 import pathlib
+import shutil
 import sys
+import zipfile
+from typing import List
+from urllib import request
 
 #####  loggger
 log = logging.getLogger(name="pyliquibase")
@@ -12,14 +17,21 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 
-
 #####
+
+LAST_STABLE_KNOWN_LB_VERSION: str = "4.6.2"
+COMPATIBLE_LIQUIBASE_VERSIONS: List = ["4.6.1", "4.6.2"]
+URL_LIQUIBASE_ZIP: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
+URL_LIQUIBASE_RELEASES: str = "https://api.github.com/repos/liquibase/liquibase/releases"
+LIQUIBASE_ZIP_NAME: str = "liquibase-{}.zip"
+LIQUIBASE_PATH_TO_EXTRACT: str = "liquibase"
 
 
 class Pyliquibase():
+    version: str = LAST_STABLE_KNOWN_LB_VERSION
 
     def __init__(self, defaultsFile: str, liquibaseHubMode: str = "off", logLevel: str = None,
-                 additionalClasspath: str = None):
+                 additionalClasspath: str = None, version: str = LAST_STABLE_KNOWN_LB_VERSION):
         """
 
         :param defaultsFile: pyliquibase defaults file
@@ -27,6 +39,9 @@ class Pyliquibase():
         :param logLevel: liquibase log level
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
+        self._check_liquibase_version_exists(version)
+        self._download_liquibase_version()
+
         self.args = []
         log.warning("Current working dir is %s" % pathlib.Path.cwd())
         if defaultsFile:
@@ -75,6 +90,9 @@ class Pyliquibase():
 
         return LiquibaseCommandLine()
 
+    def close(self):
+        shutil.rmtree(os.path.join(os.path.dirname(__file__), LIQUIBASE_PATH_TO_EXTRACT))
+
     def execute(self, *arguments: str):
         log.debug("Executing liquibase %s" % list(arguments))
         rc = self.cli.execute(self.args + list(arguments))
@@ -105,6 +123,24 @@ class Pyliquibase():
         log.debug("Rolling back to %s" % str(datetime))
         self.execute("rollbackToDate", datetime)
 
+    def _check_liquibase_version_exists(self, version: str) -> None:
+        if version in COMPATIBLE_LIQUIBASE_VERSIONS:
+            self.version = version
+        else:
+            self.version = LAST_STABLE_KNOWN_LB_VERSION
+            log.warning(f"Version {version} is not a valid version of Liquibase. "
+                        f"Using last stable known version {LAST_STABLE_KNOWN_LB_VERSION}")
+
+    def _download_liquibase_version(self) -> None:
+        with request.urlopen(URL_LIQUIBASE_ZIP.format(self.version, self.version)) as response, open(
+                LIQUIBASE_ZIP_NAME.format(self.version), "wb") as file:
+            file.write(response.read())
+
+        with zipfile.ZipFile(LIQUIBASE_ZIP_NAME.format(self.version), 'r') as zip_ref:
+            zip_ref.extractall(os.path.join(os.path.dirname(__file__), LIQUIBASE_PATH_TO_EXTRACT))
+
+        os.remove(LIQUIBASE_ZIP_NAME.format(self.version))
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -119,6 +155,7 @@ def main():
                      liquibaseHubMode=_args.liquibaseHubMode,
                      logLevel=_args.logLevel)
     pl.execute(*args)
+    pl.close()
 
 
 if __name__ == '__main__':
