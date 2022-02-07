@@ -128,8 +128,8 @@ class Pyliquibase():
             self.version = version
         else:
             self.version = LAST_STABLE_KNOWN_LB_VERSION
-            log.warning(f"Version {version} is not a valid version of Liquibase. "
-                        f"Using last stable known version {LAST_STABLE_KNOWN_LB_VERSION}")
+            log.warning(f"Version %s is not a valid version of Liquibase. "
+                        f"Using last stable known version %s" % (version, LAST_STABLE_KNOWN_LB_VERSION))
 
     def _download_liquibase_version(self) -> None:
         with request.urlopen(URL_LIQUIBASE_ZIP.format(self.version, self.version)) as response, open(
