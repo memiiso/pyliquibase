@@ -36,7 +36,6 @@ class TestPyliquibase(TestCase):
         lb.execute("validate")
         lb.execute("updateSQL")
         lb.execute("update")
-        lb.close()
         self.assertTrue(True)
 
     def test_exception(self):
@@ -45,7 +44,6 @@ class TestPyliquibase(TestCase):
         try:
             lb.status()
         except Exception as e:
-            lb.close()
             self.assertTrue("Liquibase execution failed" in str(e))
 
     def test_valid_version(self):
@@ -53,7 +51,6 @@ class TestPyliquibase(TestCase):
             defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase-fail.properties",
             version=LAST_STABLE_KNOWN_LB_VERSION
         )
-        lb.close()
         self.assertTrue(lb.version in COMPATIBLE_LIQUIBASE_VERSIONS)
 
     def test_no_valid_version_set_last_stable_known_version(self):
@@ -61,5 +58,4 @@ class TestPyliquibase(TestCase):
             defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase-fail.properties",
             version="0.0.1"
         )
-        lb.close()
         self.assertTrue(lb.version == LAST_STABLE_KNOWN_LB_VERSION)

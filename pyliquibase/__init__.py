@@ -24,7 +24,7 @@ COMPATIBLE_LIQUIBASE_VERSIONS: List = ["4.6.1", "4.6.2"]
 URL_LIQUIBASE_ZIP: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 URL_LIQUIBASE_RELEASES: str = "https://api.github.com/repos/liquibase/liquibase/releases"
 LIQUIBASE_ZIP_NAME: str = "liquibase-{}.zip"
-LIQUIBASE_PATH_TO_EXTRACT: str = "liquibase"
+LIQUIBASE_PATH_TO_EXTRACT: str = "liquibase-{}"
 
 
 class Pyliquibase():
@@ -65,9 +65,9 @@ class Pyliquibase():
         import jnius_config
         from pkg_resources import resource_filename
 
-        LIQUIBASE_CLASSPATH: list = [resource_filename(__package__, "liquibase/liquibase.jar"),
-                                     resource_filename(__package__, "liquibase/lib/*"),
-                                     resource_filename(__package__, "liquibase/lib/picocli*"),
+        LIQUIBASE_CLASSPATH: list = [resource_filename(__package__, "liquibase-{}/liquibase.jar".format(self.version)),
+                                     resource_filename(__package__, "liquibase-{}/lib/*".format(self.version)),
+                                     resource_filename(__package__, "liquibase-{}/lib/picocli*".format(self.version)),
                                      resource_filename(__package__, "jdbc-drivers/*")]
 
         if self.additional_classpath:
@@ -83,15 +83,12 @@ class Pyliquibase():
         from jnius import JavaClass, MetaJavaClass, JavaMethod
         #####
         class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
-            __javaclass__ = 'liquibase/integration/commandline/LiquibaseCommandLine'
+            __javaclass__ = "liquibase/integration/commandline/LiquibaseCommandLine"
 
             # methods
-            execute = JavaMethod('([Ljava/lang/String;)I')
+            execute = JavaMethod("([Ljava/lang/String;)I")
 
         return LiquibaseCommandLine()
-
-    def close(self):
-        shutil.rmtree(os.path.join(os.path.dirname(__file__), LIQUIBASE_PATH_TO_EXTRACT))
 
     def execute(self, *arguments: str):
         log.debug("Executing liquibase %s" % list(arguments))
@@ -132,12 +129,16 @@ class Pyliquibase():
                         "Using last stable known version %s" % (version, LAST_STABLE_KNOWN_LB_VERSION))
 
     def _download_liquibase_version(self) -> None:
+        liquibase_path = os.path.join(os.path.dirname(__file__), LIQUIBASE_PATH_TO_EXTRACT.format(self.version))
+        if os.path.exists(liquibase_path):
+            log.warning("Liquibase version %s directory founded, skipping download..." % str(self.version))
+            return
         with request.urlopen(URL_LIQUIBASE_ZIP.format(self.version, self.version)) as response, open(
                 LIQUIBASE_ZIP_NAME.format(self.version), "wb") as file:
             file.write(response.read())
 
         with zipfile.ZipFile(LIQUIBASE_ZIP_NAME.format(self.version), 'r') as zip_ref:
-            zip_ref.extractall(os.path.join(os.path.dirname(__file__), LIQUIBASE_PATH_TO_EXTRACT))
+            zip_ref.extractall(liquibase_path)
 
         os.remove(LIQUIBASE_ZIP_NAME.format(self.version))
 
