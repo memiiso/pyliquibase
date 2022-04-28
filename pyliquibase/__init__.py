@@ -156,7 +156,6 @@ def main():
                      liquibaseHubMode=_args.liquibaseHubMode,
                      logLevel=_args.logLevel)
     pl.execute(*args)
-    pl.close()
 
 
 if __name__ == '__main__':
