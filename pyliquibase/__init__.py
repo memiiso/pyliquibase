@@ -58,7 +58,7 @@ class Pyliquibase():
         if liquibaseDir and jdbcDriversDir:
             self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/")
         else:
-            resource_filename(__package__, "jdbc-drivers")
+            self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
         self.cli = self._cli()
 
     def _cli(self):
