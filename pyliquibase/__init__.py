@@ -2,6 +2,7 @@ import argparse
 import logging
 import pathlib
 import sys
+
 from pkg_resources import resource_filename
 
 #####  loggger
@@ -49,9 +50,13 @@ class Pyliquibase():
             self.args.append("--log-level=%s" % logLevel)
 
         self.additional_classpath: str = additionalClasspath
-        self.liquibase_dir: str = liquibaseDir if liquibaseDir else resource_filename(__package__, "liquibase")
+        if liquibaseDir:
+            self.liquibase_dir = liquibaseDir.strip("/")
+        else:
+            self.liquibase_dir = resource_filename(__package__, "liquibase")
+
         if liquibaseDir and jdbcDriversDir:
-            self.jdbc_drivers_dir: str = jdbcDriversDir
+            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/")
         else:
             resource_filename(__package__, "jdbc-drivers")
         self.cli = self._cli()
@@ -61,11 +66,11 @@ class Pyliquibase():
         import jnius_config
 
         LIQUIBASE_CLASSPATH: list = [self.liquibase_dir + "/liquibase.jar",
-                                     self.liquibase_dir + "liquibase/lib/*",
-                                     self.liquibase_dir + "liquibase/lib/picocli*"]
+                                     self.liquibase_dir + "/liquibase/lib/*",
+                                     self.liquibase_dir + "/liquibase/lib/picocli*"]
 
         if self.jdbc_drivers_dir:
-            LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir + "jdbc-drivers/*")
+            LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir + "/*")
 
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath)
