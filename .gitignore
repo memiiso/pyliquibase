@@ -5,6 +5,8 @@ tests/resources/bigquery
 tests/resources/bigquery.properties
 tests/resources/bigquery.xml
 
+.DS_Store
+
 build
 dist
 *.egg-info
