@@ -3,41 +3,28 @@ Magnitude Simba Google BigQuery JDBC Data Connector Release Notes
 ============================================================================== 
 
 The release notes provide details of enhancements, features, known issues, and 
-workflow changes in Simba Google BigQuery JDBC Connector 1.2.21, as well as 
+workflow changes in Simba Google BigQuery JDBC Connector 1.2.22, as well as 
 the version history. 
 
 
-1.2.21 ========================================================================
+1.2.22 =======================================================================
 
-Released 2021-10-28
+Released 2022-02-07
 
 Enhancements & New Features 
  
- * [GBQJ-497] EnableSession support
+ * [GBQJ-466][GBQJ-488][GBQJ-525][GBQJ-526][GBQJ-535] Third-party library 
+   updates
+
+   The connector has been updated with the following third-party libraries:
+   - google-cloud-bigquerystorage 2.8.3 (previously 2.5.1)
+   - avro 1.11.0 (previously 1.10.2)
+   - commons-compress 1.21 (previously 1.20)
    
-   You can now create a session ID from the first executed query on a 
-   connection. To do this, set the EnableSession property to 1. For more 
-   information, see the Installation and Configuration Guide.
+ * [GBQJ-524] Internal connector improvements
 
- * [GBQJ-516] UnsupportedHTAPIFallback support
-  
-   You can now set the connector to fall back to the REST API when using 
-   fetch workflows not supported on the High-Throughput API. To do this, set
-   the UnsupportedHTAPIFallback property to 1. For more information, see the 
-   Installation and Configuration Guide.
-
- * [GBQJ-496] INTERVAL data type support 
-
-   The connector now has limited support for the INTERVAL data type. For more
-   information, see the Installation and Configuration Guide and the Google
-   BigQuery documentation: 
-   https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#interval_type.
-  
-   The INTERVAL data type cannot be retrieved through the High-Throughput API.
-   The default connector behavior is to fallback to the REST API for this 
-   data. To disable this fallback, set the UnsupportedHTAPIFallback property 
-   to 0. 
-
+   The connector has been updated with minor internal improvements. 
+ 
 
 Known Issues
 The following are known issues that you may encounter due to limitations in
@@ -125,6 +112,38 @@ The following changes may disrupt established workflows for the connector.
 
 
 Version History ==============================================================
+
+1.2.21 -----------------------------------------------------------------------
+
+Released 2021-10-28
+
+Enhancements & New Features 
+ 
+ * [GBQJ-497] EnableSession support
+   
+   You can now create a session ID from the first executed query on a 
+   connection. To do this, set the EnableSession property to 1. For more 
+   information, see the Installation and Configuration Guide.
+
+ * [GBQJ-516] UnsupportedHTAPIFallback support
+  
+   You can now set the connector to fall back to the REST API when using 
+   fetch workflows not supported on the High-Throughput API. To do this, set
+   the UnsupportedHTAPIFallback property to 1. For more information, see the 
+   Installation and Configuration Guide.
+
+ * [GBQJ-496] INTERVAL data type support 
+
+   The connector now has limited support for the INTERVAL data type. For more
+   information, see the Installation and Configuration Guide and the Google
+   BigQuery documentation: 
+   https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#interval_type.
+  
+   The INTERVAL data type cannot be retrieved through the High-Throughput API.
+   The default connector behavior is to fallback to the REST API for this 
+   data. To disable this fallback, set the UnsupportedHTAPIFallback property 
+   to 0. 
+   
 
 1.2.20 -----------------------------------------------------------------------
 
@@ -473,56 +492,6 @@ BigQuery 1.2.8.
 
    This issue has been resolved. The getCatalogs() function now returns all 
    projects.
-
-
-1.2.4 ------------------------------------------------------------------------
-
-Released 2020-05-11
-
-Enhancements & New Features 
-
- * [GBQJ-321] Support for BigQuery scripting
-
-   The driver now supports BigQuery scripting for Standard SQL. For more 
-   information, see "Scripting in Standard SQL" in the BigQuery documentation: 
-   https://cloud.google.com/bigquery/docs/reference/standard-sql/scripting
-   
-* [GBQJ-344] Support for additional passthrough query properties
-
-   You can now pass a property through to the server by using the
-   QueryProperties connection URL. For more information, see the
-   Installation and Configuration Guide.    
-
-
-Resolved Issues
-The following issues have been resolved in Simba JDBC Driver for Google 
-BigQuery 1.2.4.
-
- * [GBQJ-336] In some cases, complex queries cause the driver to terminate 
-   unexpectedly.
-
- * [GBQJ-354] In some cases, if you include comments between DDL statements, 
-   the statement executes correctly but the driver generates an empty result 
-   set.
-
- * [GBQJ-357] If you use getProcedureColumns() to retrieve Array, Struct, or 
-   Geography types, the driver terminates unexpectedly.
-   
- * [GBQJ-354] In some cases, if you include comments between DDL statements,
-   the statement executes correctly but the driver generates an empty result
-   set.  
-
- * [GBQJ-310] When using the Numeric data type, the REST API does not include
-   leading zeros.
-   
-   This issue has been resolved. The driver now uses the default BigQuery
-   scale of 9 for Numeric data. 
- 
- * [GBQJ-310] When using the Boolean or Datetime data types, there are
-   discrepancies between flat and nested columns.
-   
-   This issue has been resolved. The format of Boolean and Datetime data in
-   nested columns now matches the format of flat columns.
 
 
 ============================================================================== 
