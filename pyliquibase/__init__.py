@@ -50,15 +50,14 @@ class Pyliquibase():
             self.args.append("--log-level=%s" % logLevel)
 
         self.additional_classpath: str = additionalClasspath
-        if liquibaseDir:
-            self.liquibase_dir = liquibaseDir.strip("/")
-        else:
-            self.liquibase_dir = resource_filename(__package__, "liquibase")
 
-        if liquibaseDir and jdbcDriversDir:
-            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/")
+        if liquibaseDir:
+            self.liquibase_dir: str = liquibaseDir.strip("/")
+            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/") if jdbcDriversDir else None
         else:
+            self.liquibase_dir: str = resource_filename(__package__, "liquibase")
             self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
+
         self.cli = self._cli()
 
     def _cli(self):
@@ -66,8 +65,8 @@ class Pyliquibase():
         import jnius_config
 
         LIQUIBASE_CLASSPATH: list = [self.liquibase_dir + "/liquibase.jar",
-                                     self.liquibase_dir + "/liquibase/lib/*",
-                                     self.liquibase_dir + "/liquibase/lib/picocli*"]
+                                     self.liquibase_dir + "/lib/*",
+                                     self.liquibase_dir + "/lib/picocli*"]
 
         if self.jdbc_drivers_dir:
             LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir + "/*")
