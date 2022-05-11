@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 import sys
+import tempfile
 import zipfile
 from urllib import request
 
@@ -135,16 +136,18 @@ class Pyliquibase():
 
     def _download_liquibase(self) -> None:
         if os.path.exists(self.liquibase_dir):
-            log.warning("Liquibase version %s directory founded, skipping download..." % str(self.version))
+            log.debug("Liquibase version %s found, skipping download..." % str(self.version))
             return
-        with request.urlopen(URL_LIQUIBASE_ZIP.format(self.version, self.version)) as response, open(
-                LIQUIBASE_ZIP_FILE.format(self.version), "wb") as file:
-            file.write(response.read())
 
-        with zipfile.ZipFile(LIQUIBASE_ZIP_FILE.format(self.version), 'r') as zip_ref:
-            zip_ref.extractall(self.liquibase_dir)
+        url = URL_LIQUIBASE_ZIP.format(self.version, self.version)
+        with tempfile.TemporaryFile() as tmpfile:
+            log.info("Downloading %s" % (url))
+            with request.urlopen(url) as response:
+                tmpfile.write(response.read())
 
-        os.remove(LIQUIBASE_ZIP_FILE.format(self.version))
+            log.info("Extracting to %s" % (self.liquibase_dir))
+            with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
+                zip_ref.extractall(self.liquibase_dir)
 
 
 def main():
