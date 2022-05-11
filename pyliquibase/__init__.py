@@ -1,7 +1,10 @@
 import argparse
 import logging
+import os
 import pathlib
 import sys
+import zipfile
+from urllib import request
 
 from pkg_resources import resource_filename
 
@@ -14,8 +17,12 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 
-
 #####
+
+DEFAULT_LIQUIBASE_VERSION: str = "4.10.0"
+URL_LIQUIBASE_ZIP: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
+LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
+LIQUIBASE_DIR: str = "liquibase-{}"
 
 
 class Pyliquibase():
@@ -25,7 +32,8 @@ class Pyliquibase():
                  logLevel: str = None,
                  liquibaseDir: str = None,
                  jdbcDriversDir: str = None,
-                 additionalClasspath: str = None):
+                 additionalClasspath: str = None,
+                 version: str = DEFAULT_LIQUIBASE_VERSION):
         """
 
         :param defaultsFile: pyliquibase defaults file
@@ -35,6 +43,7 @@ class Pyliquibase():
         :param jdbcDriversDir: user provided jdbc drivers directory.all the jar files under this directory are loaded
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
+
         self.args = []
         log.warning("Current working dir is %s" % pathlib.Path.cwd())
         if defaultsFile:
@@ -51,12 +60,16 @@ class Pyliquibase():
 
         self.additional_classpath: str = additionalClasspath
 
+        # if liquibaseDir is provided by user then switch to user provided libraries.
         if liquibaseDir:
             self.liquibase_dir: str = liquibaseDir.strip("/")
             self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/") if jdbcDriversDir else None
+            self.version: str = "user-provided"
         else:
-            self.liquibase_dir: str = resource_filename(__package__, "liquibase")
+            self.version: str = version
+            self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
             self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
+            self._download_liquibase()
 
         self.cli = self._cli()
 
@@ -64,12 +77,11 @@ class Pyliquibase():
         ##### jnius
         import jnius_config
 
-        LIQUIBASE_CLASSPATH: list = [self.liquibase_dir + "/liquibase.jar",
-                                     self.liquibase_dir + "/lib/*",
-                                     self.liquibase_dir + "/lib/picocli*"]
-
-        if self.jdbc_drivers_dir:
-            LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir + "/*")
+        LIQUIBASE_CLASSPATH: list = [
+            resource_filename(__package__, LIQUIBASE_DIR.format(self.version) + "/liquibase.jar"),
+            resource_filename(__package__, LIQUIBASE_DIR.format(self.version) + "/lib/*"),
+            resource_filename(__package__, LIQUIBASE_DIR.format(self.version) + "/lib/picocli*"),
+            resource_filename(__package__, "jdbc-drivers/*")]
 
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath)
@@ -84,10 +96,10 @@ class Pyliquibase():
         from jnius import JavaClass, MetaJavaClass, JavaMethod
         #####
         class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
-            __javaclass__ = 'liquibase/integration/commandline/LiquibaseCommandLine'
+            __javaclass__ = "liquibase/integration/commandline/LiquibaseCommandLine"
 
             # methods
-            execute = JavaMethod('([Ljava/lang/String;)I')
+            execute = JavaMethod("([Ljava/lang/String;)I")
 
         return LiquibaseCommandLine()
 
@@ -120,6 +132,19 @@ class Pyliquibase():
     def rollback_to_datetime(self, datetime):
         log.debug("Rolling back to %s" % str(datetime))
         self.execute("rollbackToDate", datetime)
+
+    def _download_liquibase(self) -> None:
+        if os.path.exists(self.liquibase_dir):
+            log.warning("Liquibase version %s directory founded, skipping download..." % str(self.version))
+            return
+        with request.urlopen(URL_LIQUIBASE_ZIP.format(self.version, self.version)) as response, open(
+                LIQUIBASE_ZIP_FILE.format(self.version), "wb") as file:
+            file.write(response.read())
+
+        with zipfile.ZipFile(LIQUIBASE_ZIP_FILE.format(self.version), 'r') as zip_ref:
+            zip_ref.extractall(self.liquibase_dir)
+
+        os.remove(LIQUIBASE_ZIP_FILE.format(self.version))
 
 
 def main():
