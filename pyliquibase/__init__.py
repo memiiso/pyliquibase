@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 import sys
+import tempfile
 import zipfile
 from urllib import request
 
@@ -66,6 +67,7 @@ class Pyliquibase():
             self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/") if jdbcDriversDir else None
             self.version: str = "user-provided"
         else:
+            # Default setting
             self.version: str = version
             self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
             self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
@@ -135,16 +137,56 @@ class Pyliquibase():
 
     def _download_liquibase(self) -> None:
         if os.path.exists(self.liquibase_dir):
-            log.warning("Liquibase version %s directory founded, skipping download..." % str(self.version))
+            log.debug("Liquibase version %s found, skipping download..." % str(self.version))
             return
-        with request.urlopen(URL_LIQUIBASE_ZIP.format(self.version, self.version)) as response, open(
-                LIQUIBASE_ZIP_FILE.format(self.version), "wb") as file:
+        _file = LIQUIBASE_ZIP_FILE.format(self.version)
+        log.warning("Downloading Liquibase version: %s ...", self.version)
+        self._download_zipfile(URL_LIQUIBASE_ZIP.format(self.version, self.version), self.liquibase_dir)
+
+    def _download_jdbc_drivers(self) -> None:
+        JDBC_SNOWFLAKE = "3.13.18"
+        JDBC_REDSHIFT = "2.1.0.7"
+        JDBC_BIGQUERY = "1.2.22.1026"
+        https: // github.com / liquibase / liquibase - redshift / releases / download / liquibase - redshift -${
+                                                                                                                   LBVERSION} / liquibase - redshift -${
+            LBVERSION}.jar
+        https: // github.com / liquibase / liquibase - bigquery / releases / download / liquibase - bigquery -${
+                                                                                                                   LBVERSION} / liquibase - bigquery -${
+            LBVERSION}.jar
+        "
+        https: // github.com / liquibase / liquibase - snowflake / releases / download / liquibase - snowflake -${
+                                                                                                                     LBVERSION} / liquibase - snowflake -${
+            LBVERSION}.jar
+        "
+        https: // repo1.maven.org / maven2 / net / snowflake / snowflake - jdbc /${
+                                                                                      JDBC_SNOWFLAKE} / snowflake - jdbc -${
+            JDBC_SNOWFLAKE}.jar
+        "
+        https: // repo1.maven.org / maven2 / com / amazon / redshift / redshift - jdbc42 /${
+                                                                                               JDBC_REDSHIFT} / redshift - jdbc42 -${
+            JDBC_REDSHIFT}.jar
+        "
+        https: // storage.googleapis.com / simba - bq - release / jdbc / SimbaJDBCDriverforGoogleBigQuery42_${
+            JDBC_BIGQUERY}.zip
+        "
+
+
+def _download_zipfile(self, url: str, destination: str) -> None:
+    with tempfile.TemporaryFile() as tmpfile:
+        log.info("Downloading %s to %s" % (url, tempfile))
+        with request.urlopen(url) as response:
+            tmpfile.write(response.read())
+
+        log.info("Extracting to %s" % (destination))
+        with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
+            zip_ref.extractall(destination)
+
+
+def _download_file(self, url: str, destination: str) -> None:
+    log.info("Downloading %s to %s" % (url, tempfile))
+    with request.urlopen(url) as response:
+        with open(destination, "w") as file:
             file.write(response.read())
-
-        with zipfile.ZipFile(LIQUIBASE_ZIP_FILE.format(self.version), 'r') as zip_ref:
-            zip_ref.extractall(self.liquibase_dir)
-
-        os.remove(LIQUIBASE_ZIP_FILE.format(self.version))
 
 
 def main():

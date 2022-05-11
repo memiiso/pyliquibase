@@ -28,6 +28,7 @@ class TestPyliquibase(TestCase):
     def test_update(self):
         self.tearDown()
         lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
+        lb._download_zipfile()
 
         lb.addarg("--log-level", "info")
         lb.addarg("--log-file", self.testlogfile.as_posix())
@@ -45,3 +46,7 @@ class TestPyliquibase(TestCase):
             lb.status()
         except Exception as e:
             self.assertTrue("Liquibase execution failed" in str(e))
+
+    def test_downloading_zip(self):
+        lb = Pyliquibase(
+            defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase-fail.properties")
