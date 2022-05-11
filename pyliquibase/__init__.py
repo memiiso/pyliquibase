@@ -2,11 +2,12 @@ import argparse
 import logging
 import os
 import pathlib
-import shutil
 import sys
 import zipfile
 from typing import List
 from urllib import request
+
+from pkg_resources import resource_filename
 
 #####  loggger
 log = logging.getLogger(name="pyliquibase")
@@ -30,13 +31,20 @@ LIQUIBASE_PATH_TO_EXTRACT: str = "liquibase-{}"
 class Pyliquibase():
     version: str = LAST_STABLE_KNOWN_LB_VERSION
 
-    def __init__(self, defaultsFile: str, liquibaseHubMode: str = "off", logLevel: str = None,
-                 additionalClasspath: str = None, version: str = LAST_STABLE_KNOWN_LB_VERSION):
+    def __init__(self, defaultsFile: str,
+                 liquibaseHubMode: str = "off",
+                 logLevel: str = None,
+                 liquibaseDir: str = None,
+                 jdbcDriversDir: str = None,
+                 additionalClasspath: str = None,
+                 version: str = LAST_STABLE_KNOWN_LB_VERSION):
         """
 
         :param defaultsFile: pyliquibase defaults file
         :param liquibaseHubMode: liquibase Hub Mode default: off
         :param logLevel: liquibase log level
+        :param liquibaseDir: user provided liquibase directory
+        :param jdbcDriversDir: user provided jdbc drivers directory.all the jar files under this directory are loaded
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
         self._check_liquibase_version_exists(version)
@@ -58,17 +66,24 @@ class Pyliquibase():
 
         self.additional_classpath: str = additionalClasspath
 
+        if liquibaseDir:
+            self.liquibase_dir: str = liquibaseDir.strip("/")
+            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/") if jdbcDriversDir else None
+        else:
+            self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_PATH_TO_EXTRACT.format(self.version))
+            self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
+
         self.cli = self._cli()
 
     def _cli(self):
         ##### jnius
         import jnius_config
-        from pkg_resources import resource_filename
 
-        LIQUIBASE_CLASSPATH: list = [resource_filename(__package__, "liquibase-{}/liquibase.jar".format(self.version)),
-                                     resource_filename(__package__, "liquibase-{}/lib/*".format(self.version)),
-                                     resource_filename(__package__, "liquibase-{}/lib/picocli*".format(self.version)),
-                                     resource_filename(__package__, "jdbc-drivers/*")]
+        LIQUIBASE_CLASSPATH: list = [
+            resource_filename(__package__, LIQUIBASE_PATH_TO_EXTRACT.format(self.version) + "/liquibase.jar"),
+            resource_filename(__package__, LIQUIBASE_PATH_TO_EXTRACT.format(self.version) + "/lib/*"),
+            resource_filename(__package__, LIQUIBASE_PATH_TO_EXTRACT.format(self.version) + "/lib/picocli*"),
+            resource_filename(__package__, "jdbc-drivers/*")]
 
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath)
