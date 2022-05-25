@@ -43,7 +43,13 @@ if __name__ == '__main__':
     liquibase.status()
     liquibase.updateSQL()
     liquibase.update()
+    liquibase.update_to_tag("MyTag")
     liquibase.rollback("MyTag")
+    # liquibase maintenance commands
+    liquibase.changelog_sync()
+    liquibase.changelog_sync_to_tag("MyTag")
+    liquibase.clear_checksums()
+    liquibase.release_locks()
 ```
 
 ## Python Java Integration

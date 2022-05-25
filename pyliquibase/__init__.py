@@ -120,6 +120,14 @@ class Pyliquibase():
     def updateSQL(self):
         self.execute("updateSQL")
 
+    def update_to_tag(self, tag: str):
+        """Executes the update-to-tag Liquibase command. `Reference Documentation <https://docs.liquibase.com/commands/update/update-to-tag.html>`_.
+
+        param: tag: Name of a tag in the changelog.
+        """
+        log.debug(f"Updating to tag {tag}")
+        self.execute(command="update-to-tag", arguments=[tag])
+
     def validate(self):
         self.execute("validate")
 
@@ -133,6 +141,32 @@ class Pyliquibase():
     def rollback_to_datetime(self, datetime):
         log.debug("Rolling back to %s" % str(datetime))
         self.execute("rollbackToDate", datetime)
+
+    def changelog_sync(self):
+        """Executes the changelog-sync Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/changelog-sync.html>`_.
+        """
+        log.debug("Marking all undeployed changes as executed in database.")
+        self.execute(command="changelog-sync")
+
+    def changelog_sync_to_tag(self, tag: str):
+        """Executes the changelog-sync-to-tag Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/changelog-sync-to-tag.html>`_.
+
+        param: tag: Name of a tag in the changelog.
+        """
+        log.debug(f"Marking all undeployed changes as executed up to tag {tag} in database.")
+        self.execute(command="changelog-sync-to-tag", arguments=[tag])
+
+    def clear_checksums(self):
+        """Executes the clear-checksums Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/clear-checksums.html>`_.
+        """
+        log.debug("Marking all undeployed changes as executed in database.")
+        self.execute(command="clear-checksums")
+
+    def release_locks(self):
+        """Executes the release-locks Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/release-locks.html>`_.
+        """
+        log.debug("Marking all undeployed changes as executed in database.")
+        self.execute(command="release-locks")
 
     def _download_liquibase(self) -> None:
         if os.path.exists(self.liquibase_dir):
