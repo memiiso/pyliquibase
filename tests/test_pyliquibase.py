@@ -25,33 +25,22 @@ class TestPyliquibase(TestCase):
         if self.testlogfile.exists():
             self.testlogfile.unlink()
 
-    def test_update_v410(self):
-        self.tearDown()
-        lb = Pyliquibase(version="4.10.0",
-                         defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
+    def test_update(self):
+        versions = ["4.9.0", "4.10.0", "4.11.0"]
+        for version in versions:
+            self.tearDown()
+            lb = Pyliquibase(version=version,
+                             defaultsFile=os.path.dirname(
+                                 os.path.realpath(__file__)) + "/resources/liquibase.properties")
 
-        lb.addarg("--log-level", "info")
-        lb.addarg("--log-file", self.testlogfile.as_posix())
+            lb.addarg("--log-level", "info")
+            lb.addarg("--log-file", self.testlogfile.as_posix())
 
-        lb.status()
-        lb.execute("validate")
-        lb.execute("updateSQL")
-        lb.execute("update")
-        self.assertTrue(True)
-
-    def test_update_v411(self):
-        self.tearDown()
-        lb = Pyliquibase(version="4.11.0",
-                         defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
-
-        lb.addarg("--log-level", "info")
-        lb.addarg("--log-file", self.testlogfile.as_posix())
-
-        lb.status()
-        lb.execute("validate")
-        lb.execute("updateSQL")
-        lb.execute("update")
-        self.assertTrue(True)
+            lb.status()
+            lb.execute("validate")
+            lb.execute("updateSQL")
+            lb.execute("update")
+            self.assertTrue(True)
 
     def test_exception(self):
         lb = Pyliquibase(
