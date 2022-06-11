@@ -20,10 +20,12 @@ log.addHandler(handler)
 
 #####
 
-DEFAULT_LIQUIBASE_VERSION: str = "4.10.0"
-URL_LIQUIBASE_ZIP: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
+DEFAULT_LIQUIBASE_VERSION: str = "4.11.0"
+LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
 LIQUIBASE_DIR: str = "liquibase-{}"
+LIQUIBASE_EXT_LIST: list = ["liquibase-bigquery", "liquibase-redshift", "liquibase-snowflake"]
+LIQUIBASE_EXT_URL: str = "https://github.com/liquibase/{}/releases/download/{}/{}.jar"
 
 
 class Pyliquibase():
@@ -70,6 +72,12 @@ class Pyliquibase():
             self.version: str = version
             self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
             self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
+
+        self.liquibase_lib_dir: str = self.liquibase_dir + "/lib"
+        self.liquibase_internal_dir: str = self.liquibase_dir + "/internal"
+        self.liquibase_internal_lib_dir: str = self.liquibase_internal_dir + "/lib"
+
+        if not liquibaseDir:
             self._download_liquibase()
 
         self.cli = self._cli()
@@ -79,20 +87,21 @@ class Pyliquibase():
         import jnius_config
 
         LIQUIBASE_CLASSPATH: list = [
-            resource_filename(__package__, LIQUIBASE_DIR.format(self.version) + "/liquibase.jar"),
-            resource_filename(__package__, LIQUIBASE_DIR.format(self.version) + "/lib/*"),
-            resource_filename(__package__, LIQUIBASE_DIR.format(self.version) + "/lib/picocli*"),
-            resource_filename(__package__, "jdbc-drivers/*")]
+            self.liquibase_dir + "/liquibase.jar",
+            self.liquibase_lib_dir + "/*",
+            self.liquibase_internal_dir + "/*",
+            self.liquibase_internal_lib_dir + "/*",
+            self.jdbc_drivers_dir + "/*"]
 
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath)
 
         if not jnius_config.vm_running:
             jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
-            log.debug("classpath: %s" % jnius_config.get_classpath())
         else:
             log.warning("VM is already running, can't set classpath/options")
-            log.debug("VM started at" + jnius_config.vm_started_at)
+
+        log.debug("classpath: %s" % jnius_config.get_classpath())
 
         from jnius import JavaClass, MetaJavaClass, JavaMethod
         #####
@@ -171,17 +180,31 @@ class Pyliquibase():
     def _download_liquibase(self) -> None:
         if os.path.exists(self.liquibase_dir):
             log.debug("Liquibase version %s found, skipping download..." % str(self.version))
-            return
+        else:
+            _file = LIQUIBASE_ZIP_FILE.format(self.version)
+            log.warning("Downloading Liquibase version: %s ...", self.version)
+            self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
+                                   destination=self.liquibase_dir)
 
-        url = URL_LIQUIBASE_ZIP.format(self.version, self.version)
-        with tempfile.TemporaryFile() as tmpfile:
-            log.info("Downloading %s" % (url))
-            with request.urlopen(url) as response:
-                tmpfile.write(response.read())
+        for ext in LIQUIBASE_EXT_LIST:
+            ext_version = "%s-%s" % (ext, self.version)
+            ext_destination = "%s/%s.jar" % (self.liquibase_lib_dir, ext_version)
+            ext_url = LIQUIBASE_EXT_URL.format(ext, ext_version, ext_version)
+            if not os.path.exists(ext_destination):
+                log.warning("Downloading Liquibase extension: %s ...", ext_version)
+                self._download_file(url=ext_url, destination=ext_destination)
 
-            log.info("Extracting to %s" % (self.liquibase_dir))
+    def _download_zipfile(self, url: str, destination: str) -> None:
+        with tempfile.NamedTemporaryFile(suffix="_liquibase.zip") as tmpfile:
+            self._download_file(url, tmpfile.name)
+
+            log.info("Extracting to %s" % (destination))
             with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
-                zip_ref.extractall(self.liquibase_dir)
+                zip_ref.extractall(destination)
+
+    def _download_file(self, url: str, destination: str) -> None:
+        log.info("Downloading %s to %s" % (url, destination))
+        request.urlretrieve(url, destination)
 
 
 def main():
