@@ -43,12 +43,11 @@ class Pyliquibase():
         :param liquibaseHubMode: liquibase Hub Mode default: off
         :param logLevel: liquibase log level
         :param liquibaseDir: user provided liquibase directory
-        :param jdbcDriversDir: user provided jdbc drivers directory.all the jar files under this directory are loaded
+        :param jdbcDriversDir: user provided jdbc drivers directory. all the jar files under this directory are loaded
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
 
         self.args = []
-        log.warning("Current working dir is %s" % pathlib.Path.cwd())
         if defaultsFile:
             if not pathlib.Path.cwd().joinpath(defaultsFile).is_file() and not pathlib.Path(defaultsFile).is_file():
                 raise FileNotFoundError("defaultsFile not found! %s" % defaultsFile)
@@ -63,20 +62,25 @@ class Pyliquibase():
 
         self.additional_classpath: str = additionalClasspath
 
-        # if liquibaseDir is provided by user then switch to user provided libraries.
+        # if liquibaseDir is provided then switch to user provided liquibase.
         if liquibaseDir:
             self.liquibase_dir: str = liquibaseDir.strip("/")
-            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/") if jdbcDriversDir else None
             self.version: str = "user-provided"
         else:
             self.version: str = version
             self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
+
+        # if jdbcDriversDir is provided then use user provided jdbc driver libraries
+        if jdbcDriversDir:
+            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/")
+        else:
             self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
 
         self.liquibase_lib_dir: str = self.liquibase_dir + "/lib"
         self.liquibase_internal_dir: str = self.liquibase_dir + "/internal"
         self.liquibase_internal_lib_dir: str = self.liquibase_internal_dir + "/lib"
 
+        # if liquibase directory not found download liquibase from Github and extract it under the directory
         if not liquibaseDir:
             self._download_liquibase()
 
@@ -114,6 +118,7 @@ class Pyliquibase():
         return LiquibaseCommandLine()
 
     def execute(self, *arguments: str):
+        log.warning("Current working dir is %s" % pathlib.Path.cwd())
         log.debug("Executing liquibase %s" % list(arguments))
         rc = self.cli.execute(self.args + list(arguments))
         if rc:
@@ -178,6 +183,9 @@ class Pyliquibase():
         self.execute("release-locks")
 
     def _download_liquibase(self) -> None:
+        """ If self.liquibase_dir not found it downloads liquibase from Github and extracts it under self.liquibase_dir
+        :return: 
+        """
         if os.path.exists(self.liquibase_dir):
             log.debug("Liquibase version %s found, skipping download..." % str(self.version))
         else:
@@ -195,6 +203,11 @@ class Pyliquibase():
                 self._download_file(url=ext_url, destination=ext_destination)
 
     def _download_zipfile(self, url: str, destination: str) -> None:
+        """downloads zip file from given url and extract to destination folder
+        :param url: 
+        :param destination: 
+        :return: 
+        """
         with tempfile.NamedTemporaryFile(suffix="_liquibase.zip") as tmpfile:
             self._download_file(url, tmpfile.name)
 
@@ -203,6 +216,11 @@ class Pyliquibase():
                 zip_ref.extractall(destination)
 
     def _download_file(self, url: str, destination: str) -> None:
+        """downloads file from given url and saves to destination path
+        :param url: url to file
+        :param destination: destination path including filename
+        :return: 
+        """
         log.info("Downloading %s to %s" % (url, destination))
         request.urlretrieve(url, destination)
 
