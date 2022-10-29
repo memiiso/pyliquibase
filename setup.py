@@ -25,5 +25,5 @@ setup(
     license="Apache License 2.0",
     test_suite='tests',
     install_requires=["Cython==0.29.32","pyjnius==1.4.2"],
-    python_requires='>=3',
+    python_requires='>=3.7',
 )
