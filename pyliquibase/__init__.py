@@ -122,7 +122,7 @@ class Pyliquibase():
         log.debug("Executing liquibase %s" % list(arguments))
         rc = self.cli.execute(self.args + list(arguments))
         if rc:
-            raise Exception("Liquibase execution failed with exit code:%s" % rc)
+            raise RuntimeError("Liquibase execution failed with exit code:%s" % rc)
 
     def addarg(self, key: str, val):
         _new_arg = "%s=%s" % (key, val)
