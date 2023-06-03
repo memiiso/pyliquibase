@@ -6,6 +6,7 @@ import sys
 import tempfile
 import zipfile
 from urllib import request
+from urllib.error import HTTPError
 
 from pkg_resources import resource_filename
 
@@ -20,7 +21,7 @@ log.addHandler(handler)
 
 #####
 
-DEFAULT_LIQUIBASE_VERSION: str = "4.11.0"
+DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
 LIQUIBASE_DIR: str = "liquibase-{}"
@@ -196,11 +197,19 @@ class Pyliquibase():
 
         for ext in LIQUIBASE_EXT_LIST:
             ext_version = "%s-%s" % (ext, self.version)
+            ext_version2 = "v%s" % self.version
             ext_destination = "%s/%s.jar" % (self.liquibase_lib_dir, ext_version)
             ext_url = LIQUIBASE_EXT_URL.format(ext, ext_version, ext_version)
+            ext_url2 = LIQUIBASE_EXT_URL.format(ext, ext_version2, ext_version)
             if not os.path.exists(ext_destination):
                 log.warning("Downloading Liquibase extension: %s ...", ext_version)
-                self._download_file(url=ext_url, destination=ext_destination)
+                try:
+                    self._download_file(url=ext_url, destination=ext_destination)
+                except HTTPError as _:
+                    try:
+                        self._download_file(url=ext_url2, destination=ext_destination)
+                    except:  # pylint: disable=bare-except
+                        log.warning("Failed to download Liquibase extension: %s", ext_version)
 
     def _download_zipfile(self, url: str, destination: str) -> None:
         """downloads zip file from given url and extract to destination folder
@@ -222,7 +231,11 @@ class Pyliquibase():
         :return: 
         """
         log.info("Downloading %s to %s" % (url, destination))
-        request.urlretrieve(url, destination)
+        try:
+            request.urlretrieve(url, destination)
+        except Exception as e:
+            log.error("Failed to download %s" % url)
+            raise e
 
 
 def main():
