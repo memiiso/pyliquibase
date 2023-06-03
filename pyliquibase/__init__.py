@@ -7,6 +7,7 @@ import tempfile
 import zipfile
 from urllib import request
 from urllib.error import HTTPError
+from urllib.parse import urlparse
 
 from pkg_resources import resource_filename
 
@@ -195,21 +196,38 @@ class Pyliquibase():
             self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
                                    destination=self.liquibase_dir)
 
+        self._download_liquibase_extension_libs()
+
+    def _download_liquibase_extension_libs(self):
         for ext in LIQUIBASE_EXT_LIST:
             ext_version = "%s-%s" % (ext, self.version)
             ext_version2 = "v%s" % self.version
-            ext_destination = "%s/%s.jar" % (self.liquibase_lib_dir, ext_version)
             ext_url = LIQUIBASE_EXT_URL.format(ext, ext_version, ext_version)
             ext_url2 = LIQUIBASE_EXT_URL.format(ext, ext_version2, ext_version)
-            if not os.path.exists(ext_destination):
-                log.warning("Downloading Liquibase extension: %s ...", ext_version)
+            try:
+                self.download_additional_java_library(url=ext_url, destination_dir=self.liquibase_lib_dir)
+            except HTTPError as _:
                 try:
-                    self._download_file(url=ext_url, destination=ext_destination)
-                except HTTPError as _:
-                    try:
-                        self._download_file(url=ext_url2, destination=ext_destination)
-                    except:  # pylint: disable=bare-except
-                        log.warning("Failed to download Liquibase extension: %s", ext_version)
+                    self.download_additional_java_library(url=ext_url2, destination_dir=self.liquibase_lib_dir)
+                except:  # pylint: disable=bare-except
+                    log.warning("Failed to download Liquibase extension: %s", ext_version)
+
+    def download_additional_java_library(self, url: str, destination_dir: str = None):
+        """
+        Downloads java library file from given url and saves to destination directory. If file already exists it skips the download.
+        :param url: url to java library jar file, http:xyz.com/mylibrary.jar
+        :param destination_dir: Optional, download destination. example: /mdirectory1/mydirectory2/libs/
+        :return: None
+        """
+        _url = urlparse(url)
+        lib_file_name = os.path.basename(_url.path)
+        destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
+        destination_file = "%s/%s" % (destination_dir, lib_file_name)
+        if pathlib.Path(destination_file).exists():
+            log.info("Java lib already available skipping download: %s", destination_file)
+        else:
+            log.info("Downloading java lib: %s to %s", url, destination_file)
+            self._download_file(url=url, destination=destination_file)
 
     def _download_zipfile(self, url: str, destination: str) -> None:
         """downloads zip file from given url and extract to destination folder
@@ -218,6 +236,7 @@ class Pyliquibase():
         :return: 
         """
         with tempfile.NamedTemporaryFile(suffix="_liquibase.zip") as tmpfile:
+            log.info("Downloading %s to %s" % (url, destination))
             self._download_file(url, tmpfile.name)
 
             log.info("Extracting to %s" % (destination))
@@ -230,7 +249,6 @@ class Pyliquibase():
         :param destination: destination path including filename
         :return: 
         """
-        log.info("Downloading %s to %s" % (url, destination))
         try:
             request.urlretrieve(url, destination)
         except Exception as e:
