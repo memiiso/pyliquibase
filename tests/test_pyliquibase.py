@@ -2,6 +2,7 @@ import os
 import pathlib
 from unittest import TestCase
 
+import pyliquibase
 from pyliquibase import Pyliquibase
 
 
@@ -26,7 +27,7 @@ class TestPyliquibase(TestCase):
             self.testlogfile.unlink()
 
     def test_update(self):
-        versions = ["4.9.0", "4.10.0", "4.11.0"]
+        versions = ["4.9.0", "4.10.0", "4.11.0", pyliquibase.DEFAULT_LIQUIBASE_VERSION]
         for version in versions:
             self.tearDown()
             lb = Pyliquibase(version=version,
