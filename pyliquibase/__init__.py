@@ -26,7 +26,7 @@ DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
 LIQUIBASE_DIR: str = "liquibase-{}"
-LIQUIBASE_EXT_LIST: list = ["liquibase-bigquery", "liquibase-redshift", "liquibase-snowflake"]
+LIQUIBASE_EXT_LIST: list = ["liquibase-bigquery", "liquibase-redshift"]
 LIQUIBASE_EXT_URL: str = "https://github.com/liquibase/{}/releases/download/{}/{}.jar"
 
 

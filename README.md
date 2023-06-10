@@ -6,7 +6,7 @@
 
 Use [liquibase](http://www.liquibase.org/) with python. Java integration is done using Java Native Interface (JNI) using [pyjnius](https://github.com/kivy/pyjnius)
 
-MySQL, Postgresql, Bigquery, Redshift JDBC Drivers included.
+MariaDB/MySQL, MSSQL, PostgreSQL, SQLite, H2, HSQLDB, Snowflake, Bigquery, Redshift JDBC Drivers included.
 
 ## Installation
 
