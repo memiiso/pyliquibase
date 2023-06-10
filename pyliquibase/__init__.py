@@ -36,7 +36,6 @@ class Pyliquibase():
                  liquibaseHubMode: str = "off",
                  logLevel: str = None,
                  liquibaseDir: str = None,
-                 jdbcDriversDir: str = None,
                  additionalClasspath: str = None,
                  version: str = DEFAULT_LIQUIBASE_VERSION):
         """
@@ -45,7 +44,6 @@ class Pyliquibase():
         :param liquibaseHubMode: liquibase Hub Mode default: off
         :param logLevel: liquibase log level
         :param liquibaseDir: user provided liquibase directory
-        :param jdbcDriversDir: user provided jdbc drivers directory. all the jar files under this directory are loaded
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
 
@@ -96,8 +94,7 @@ class Pyliquibase():
             self.liquibase_dir + "/liquibase.jar",
             self.liquibase_lib_dir + "/*",
             self.liquibase_internal_dir + "/*",
-            self.liquibase_internal_lib_dir + "/*",
-            self.jdbc_drivers_dir + "/*"]
+            self.liquibase_internal_lib_dir + "/*"]
 
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath)
