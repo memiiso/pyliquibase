@@ -66,7 +66,7 @@ class Pyliquibase():
 
         # if liquibaseDir is provided then switch to user provided liquibase.
         if liquibaseDir:
-            self.liquibase_dir: str = liquibaseDir.strip("/")
+            self.liquibase_dir: str = liquibaseDir.rstrip("/")
             self.version: str = "user-provided"
         else:
             self.version: str = version
@@ -74,7 +74,7 @@ class Pyliquibase():
 
         # if jdbcDriversDir is provided then use user provided jdbc driver libraries
         if jdbcDriversDir:
-            self.jdbc_drivers_dir: str = jdbcDriversDir.strip("/")
+            self.jdbc_drivers_dir: str = jdbcDriversDir.rstrip("/")
         else:
             self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
 
