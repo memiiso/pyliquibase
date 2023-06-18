@@ -7,11 +7,13 @@ from pyliquibase import Pyliquibase
 
 
 class TestPyliquibase(TestCase):
+
     def setUp(self):
         self.dir_test = pathlib.Path(__file__).parent
         self.testdb = self.dir_test.as_posix() + 'testdb'
         self.testlogfile = self.dir_test.joinpath('liquibase.log')
         os.chdir(self.dir_test.as_posix())
+        self.TEST_LIQUIBASE_VERSION = os.getenv("TEST_LIQUIBASE_VERSION", pyliquibase.DEFAULT_LIQUIBASE_VERSION)
 
     def tearDown(self):
         if os.path.exists(self.testdb):
@@ -27,21 +29,20 @@ class TestPyliquibase(TestCase):
             self.testlogfile.unlink()
 
     def test_update(self):
-        versions = ["4.9.0", "4.10.0", "4.11.0", pyliquibase.DEFAULT_LIQUIBASE_VERSION]
-        for version in versions:
-            self.tearDown()
-            lb = Pyliquibase(version=version,
-                             defaultsFile=os.path.dirname(
-                                 os.path.realpath(__file__)) + "/resources/liquibase.properties")
+        print("Testing LIQUIBASE_VERSION %s" % self.TEST_LIQUIBASE_VERSION)
+        self.tearDown()
+        lb = Pyliquibase(version=self.TEST_LIQUIBASE_VERSION,
+                         defaultsFile=os.path.dirname(
+                             os.path.realpath(__file__)) + "/resources/liquibase.properties")
 
-            lb.addarg("--log-level", "info")
-            lb.addarg("--log-file", self.testlogfile.as_posix())
+        lb.addarg("--log-level", "info")
+        lb.addarg("--log-file", self.testlogfile.as_posix())
 
-            lb.status()
-            lb.execute("validate")
-            lb.execute("updateSQL")
-            lb.execute("update")
-            self.assertTrue(True)
+        lb.status()
+        lb.execute("validate")
+        lb.execute("updateSQL")
+        lb.execute("update")
+        self.assertTrue(True)
 
     def test_exception(self):
         lb = Pyliquibase(
