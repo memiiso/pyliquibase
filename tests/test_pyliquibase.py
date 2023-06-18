@@ -54,4 +54,11 @@ class TestPyliquibase(TestCase):
     def test_download_additional_java_library(self):
         lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
         lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.11.0/liquibase-snowflake-4.11.0.jar")
+        # test re downloading succeeds
         lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.11.0/liquibase-snowflake-4.11.0.jar")
+        # download Bigquery jdbc
+        lb.download_additional_java_library(url="https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.3.3.1004.zip")
+        # download redshift jdbc
+        lb.download_additional_java_library(url="https://repo1.maven.org/maven2/com/amazon/redshift/redshift-jdbc42/2.1.0.16/redshift-jdbc42-2.1.0.16.jar")
+        # download snowflake jdbc
+        lb.download_additional_java_library(url="https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.33/snowflake-jdbc-3.13.33.jar")

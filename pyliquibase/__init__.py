@@ -73,11 +73,7 @@ class Pyliquibase():
             self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
 
         # if jdbcDriversDir is provided then use user provided jdbc driver libraries
-        if jdbcDriversDir:
-            self.jdbc_drivers_dir: str = jdbcDriversDir.rstrip("/")
-        else:
-            self.jdbc_drivers_dir: str = resource_filename(__package__, "jdbc-drivers")
-
+        self.jdbc_drivers_dir: str = jdbcDriversDir.rstrip("/") if jdbcDriversDir else None
         self.liquibase_lib_dir: str = self.liquibase_dir + "/lib"
         self.liquibase_internal_dir: str = self.liquibase_dir + "/internal"
         self.liquibase_internal_lib_dir: str = self.liquibase_internal_dir + "/lib"
@@ -96,8 +92,10 @@ class Pyliquibase():
             self.liquibase_dir + "/liquibase.jar",
             self.liquibase_lib_dir + "/*",
             self.liquibase_internal_dir + "/*",
-            self.liquibase_internal_lib_dir + "/*",
-            self.jdbc_drivers_dir + "/*"]
+            self.liquibase_internal_lib_dir + "/*"]
+
+        if self.jdbc_drivers_dir:
+            LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir)
 
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath)
