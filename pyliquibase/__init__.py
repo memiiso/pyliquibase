@@ -93,7 +93,7 @@ class Pyliquibase():
         import jnius_config
 
         LIQUIBASE_CLASSPATH: list = [
-            self.liquibase_dir + "/liquibase.jar",
+            self.liquibase_dir,
             self.liquibase_lib_dir + "/*",
             self.liquibase_internal_dir + "/*",
             self.liquibase_internal_lib_dir + "/*",
