@@ -53,6 +53,6 @@ class TestPyliquibase(TestCase):
     
     def test_download_additional_java_library(self):
         lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
-        lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-bigquery-4.21.1/liquibase-bigquery-4.21.1.jar")
-        lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-bigquery-4.21.1/liquibase-bigquery-4.21.1.jar")
+        lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.21.1/liquibase-snowflake-4.21.1.jar")
+        lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.21.1/liquibase-snowflake-4.21.1.jar")
     
