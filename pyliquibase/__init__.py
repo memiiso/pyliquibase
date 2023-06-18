@@ -103,7 +103,7 @@ class Pyliquibase():
         if not jnius_config.vm_running:
             jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
         else:
-            log.warning("VM is already running, can't set classpath/options")
+            log.warning("VM is already running, can't set classpath/options! classpath: %s" % jnius_config.get_classpath())
 
         log.debug("classpath: %s" % jnius_config.get_classpath())
 
