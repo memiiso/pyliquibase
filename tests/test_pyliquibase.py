@@ -51,7 +51,7 @@ class TestPyliquibase(TestCase):
             lb.status()
         except Exception as e:
             self.assertTrue("Liquibase execution failed" in str(e))
-
+    
     def test_download_additional_java_library(self):
         lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
         lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.11.0/liquibase-snowflake-4.11.0.jar")
