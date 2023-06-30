@@ -238,13 +238,14 @@ class Pyliquibase():
         :param destination: 
         :return: 
         """
-        with tempfile.NamedTemporaryFile(suffix="_liquibase.zip") as tmpfile:
+        with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=False) as tmpfile:
             log.info("Downloading %s to %s" % (url, destination))
             self._download_file(url, tmpfile.name)
 
             log.info("Extracting to %s" % (destination))
             with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
                 zip_ref.extractall(destination)
+        os.unlink(tmpfile.name)
 
     def _download_file(self, url: str, destination: str) -> None:
         """downloads file from given url and saves to destination path
