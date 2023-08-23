@@ -13,7 +13,7 @@ setup(
             'pyliquibase = pyliquibase:main',
         ],
     },
-    version='2.0.12',
+    version='2.0.13',
     packages=find_packages(),
     author="Memiiso Organization",
     description='Python liquibase',
