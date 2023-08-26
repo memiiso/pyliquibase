@@ -62,7 +62,7 @@ class Pyliquibase():
         if logLevel:
             self.args.append("--log-level=%s" % logLevel)
 
-        self.additional_classpath: str = additionalClasspath
+        self.additional_classpath: str = additionalClasspath.rstrip('/') if additionalClasspath else None
 
         # if liquibaseDir is provided then switch to user provided liquibase.
         if liquibaseDir:
@@ -95,15 +95,16 @@ class Pyliquibase():
             self.liquibase_internal_lib_dir + "/*"]
 
         if self.jdbc_drivers_dir:
-            LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir)
+            LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir + "/*")
 
         if self.additional_classpath:
-            LIQUIBASE_CLASSPATH.append(self.additional_classpath)
+            LIQUIBASE_CLASSPATH.append(self.additional_classpath + "/*")
 
         if not jnius_config.vm_running:
             jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
         else:
-            log.warning("VM is already running, can't set classpath/options! classpath: %s" % jnius_config.get_classpath())
+            log.warning(
+                "VM is already running, can't set classpath/options! classpath: %s" % jnius_config.get_classpath())
 
         log.debug("classpath: %s" % jnius_config.get_classpath())
 
@@ -219,24 +220,25 @@ class Pyliquibase():
         """
         _url = urlparse(url)
         lib_file_name: str = os.path.basename(_url.path)
-        destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
-        if lib_file_name.lower().endswith(".zip"):
-            self._download_zipfile(url=url, destination=destination_dir)
-        elif lib_file_name.lower().endswith(".jar"):
-            destination_file = "%s/%s" % (destination_dir, lib_file_name)
-            if pathlib.Path(destination_file).exists():
-                log.info("Java lib already available skipping download: %s", destination_file)
-            else:
-                log.info("Downloading java lib: %s to %s", url, destination_file)
-                self._download_file(url=url, destination=destination_file)
-        else:
+
+        if not (lib_file_name.lower().endswith('.zip') or lib_file_name.lower().endswith('.jar')):
             raise RuntimeError("Unexpected url, Expecting link to a `**.jar` or `**.zip` file!")
+
+        destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
+        destination_file = "%s/%s" % (destination_dir, lib_file_name)
+        if pathlib.Path(destination_file).exists():
+            log.info("File already available skipping download: %s", destination_file)
+        else:
+            log.info("Downloading file: %s to %s", url, destination_file)
+            self._download_file(url=url, destination=destination_file)
+            with zipfile.ZipFile(destination_file, 'r') as zip_ref:
+                zip_ref.extractall(destination_dir)
 
     def _download_zipfile(self, url: str, destination: str) -> None:
         """downloads zip file from given url and extract to destination folder
-        :param url: 
-        :param destination: 
-        :return: 
+        :param url:
+        :param destination:
+        :return:
         """
         with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=False) as tmpfile:
             log.info("Downloading %s to %s" % (url, destination))
