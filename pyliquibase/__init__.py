@@ -6,7 +6,6 @@ import sys
 import tempfile
 import zipfile
 from urllib import request
-from urllib.error import HTTPError
 from urllib.parse import urlparse
 
 from pkg_resources import resource_filename
@@ -26,8 +25,6 @@ DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
 LIQUIBASE_DIR: str = "liquibase-{}"
-LIQUIBASE_EXT_LIST: list = ["liquibase-bigquery", "liquibase-redshift"]
-LIQUIBASE_EXT_URL: str = "https://github.com/liquibase/{}/releases/download/{}/{}.jar"
 
 
 class Pyliquibase():
@@ -194,22 +191,6 @@ class Pyliquibase():
             log.warning("Downloading Liquibase version: %s ...", self.version)
             self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
                                    destination=self.liquibase_dir)
-
-        self._download_liquibase_extension_libs()
-
-    def _download_liquibase_extension_libs(self):
-        for ext in LIQUIBASE_EXT_LIST:
-            ext_version = "%s-%s" % (ext, self.version)
-            ext_version2 = "v%s" % self.version
-            ext_url = LIQUIBASE_EXT_URL.format(ext, ext_version, ext_version)
-            ext_url2 = LIQUIBASE_EXT_URL.format(ext, ext_version2, ext_version)
-            try:
-                self.download_additional_java_library(url=ext_url, destination_dir=self.liquibase_lib_dir)
-            except HTTPError as _:
-                try:
-                    self.download_additional_java_library(url=ext_url2, destination_dir=self.liquibase_lib_dir)
-                except:  # pylint: disable=bare-except
-                    log.warning("Failed to download Liquibase extension: %s", ext_version)
 
     def download_additional_java_library(self, url: str, destination_dir: str = None):
         """
