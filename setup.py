@@ -13,7 +13,7 @@ setup(
             'pyliquibase = pyliquibase:main',
         ],
     },
-    version='2.0.13',
+    version='2.1.0',
     packages=find_packages(),
     author="Memiiso Organization",
     description='Python liquibase',
@@ -25,5 +25,5 @@ setup(
     license="Apache License 2.0",
     test_suite='tests',
     install_requires=["pyjnius==1.5.0"],
-    python_requires='>=3.7',
+    python_requires='>=3.8',
 )
