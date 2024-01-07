@@ -46,21 +46,6 @@ class Pyliquibase():
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
 
-        self.args = []
-        if defaultsFile:
-            if not pathlib.Path.cwd().joinpath(defaultsFile).is_file() and not pathlib.Path(defaultsFile).is_file():
-                raise FileNotFoundError("defaultsFile not found! %s" % defaultsFile)
-
-            self.args.append("--defaults-file=%s" % defaultsFile)
-
-        if liquibaseHubMode:
-            self.args.append("--hub-mode=%s" % liquibaseHubMode)
-
-        if logLevel:
-            self.args.append("--log-level=%s" % logLevel)
-
-        self.additional_classpath: str = additionalClasspath.rstrip('/') if additionalClasspath else None
-
         # if liquibaseDir is provided then switch to user provided liquibase.
         if liquibaseDir:
             self.liquibase_dir: str = liquibaseDir.rstrip("/")
@@ -68,6 +53,21 @@ class Pyliquibase():
         else:
             self.version: str = version
             self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
+
+        self.args = []
+        if defaultsFile:
+            if not pathlib.Path.cwd().joinpath(defaultsFile).is_file() and not pathlib.Path(defaultsFile).is_file():
+                raise FileNotFoundError("defaultsFile not found! %s" % defaultsFile)
+
+            self.args.append("--defaults-file=%s" % defaultsFile)
+
+        if liquibaseHubMode and self.version < "4.22.0":
+            self.args.append("--hub-mode=%s" % liquibaseHubMode)
+
+        if logLevel:
+            self.args.append("--log-level=%s" % logLevel)
+
+        self.additional_classpath: str = additionalClasspath.rstrip('/') if additionalClasspath else None
 
         # if jdbcDriversDir is provided then use user provided jdbc driver libraries
         self.jdbc_drivers_dir: str = jdbcDriversDir.rstrip("/") if jdbcDriversDir else None
