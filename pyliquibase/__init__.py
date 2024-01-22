@@ -19,8 +19,6 @@ LIQUIBASE_DIR: str = "liquibase-{}"
 class Pyliquibase():
 
     def __init__(self, defaultsFile: str,
-                 liquibaseHubMode: str = "off",
-                 logLevel: str = None,
                  liquibaseDir: str = None,
                  jdbcDriversDir: str = None,
                  additionalClasspath: str = None,
@@ -28,16 +26,12 @@ class Pyliquibase():
         """
 
         :param defaultsFile: pyliquibase defaults file
-        :param liquibaseHubMode: liquibase Hub Mode default: off
-        :param logLevel: liquibase log level
         :param liquibaseDir: user provided liquibase directory
         :param jdbcDriversDir: user provided jdbc drivers directory. all the jar files under this directory are loaded
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
 
         self._log = None
-        # if liquibaseDir is provided then switch to user provided liquibase.
-
         # if liquibaseDir is provided then switch to user provided liquibase.
         self.version: str = version if version else DEFAULT_LIQUIBASE_VERSION
         self.liquibase_dir: str = liquibaseDir.rstrip("/") if liquibaseDir else resource_filename(__package__,
@@ -51,14 +45,7 @@ class Pyliquibase():
 
             self.args.append("--defaults-file=%s" % defaultsFile)
 
-        if liquibaseHubMode and self.version < "4.22.0":
-            self.args.append("--hub-mode=%s" % liquibaseHubMode)
-
-        if logLevel:
-            self.args.append("--log-level=%s" % logLevel)
-
         self.additional_classpath: str = additionalClasspath.rstrip('/') if additionalClasspath else None
-
         # if jdbcDriversDir is provided then use user provided jdbc driver libraries
         self.jdbc_drivers_dir: str = jdbcDriversDir.rstrip("/") if jdbcDriversDir else None
         self.liquibase_lib_dir: str = self.liquibase_dir + "/lib"
@@ -66,7 +53,7 @@ class Pyliquibase():
         self.liquibase_internal_lib_dir: str = self.liquibase_internal_dir + "/lib"
 
         # if liquibase directory not found download liquibase from Github and extract it under the directory
-        if os.path.exists(self.liquibase_dir):
+        if os.path.exists(self.liquibase_dir) and any(pathlib.Path(self.liquibase_dir).iterdir()):
             self.log.debug("Liquibase %s found, skipping download..." % str(self.liquibase_dir))
         else:
             self._download_liquibase()
@@ -249,13 +236,9 @@ def main():
     parser.add_argument('--defaultsFile', type=str, default="liquibase.properties",
                         help='Relative path to liquibase.properties file'
                         )
-    parser.add_argument('--liquibaseHubMode', type=str, default="off", help='liquibaseHubMode default "off"')
-    parser.add_argument('--logLevel', type=str, default=None, help='logLevel name')
     _args, args = parser.parse_known_args()
 
-    pl = Pyliquibase(defaultsFile=_args.defaultsFile,
-                     liquibaseHubMode=_args.liquibaseHubMode,
-                     logLevel=_args.logLevel)
+    pl = Pyliquibase(defaultsFile=_args.defaultsFile)
     pl.execute(*args)
 
 
