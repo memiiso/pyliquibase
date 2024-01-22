@@ -10,7 +10,6 @@ from urllib.parse import urlparse
 
 from pkg_resources import resource_filename
 
-
 DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
@@ -38,12 +37,12 @@ class Pyliquibase():
 
         self._log = None
         # if liquibaseDir is provided then switch to user provided liquibase.
-        if liquibaseDir:
-            self.liquibase_dir: str = liquibaseDir.rstrip("/")
-            self.version: str = "user-provided"
-        else:
-            self.version: str = version
-            self.liquibase_dir: str = resource_filename(__package__, LIQUIBASE_DIR.format(self.version))
+
+        # if liquibaseDir is provided then switch to user provided liquibase.
+        self.version: str = version if version else DEFAULT_LIQUIBASE_VERSION
+        self.liquibase_dir: str = liquibaseDir.rstrip("/") if liquibaseDir else resource_filename(__package__,
+                                                                                                  LIQUIBASE_DIR.format(
+                                                                                                      self.version))
 
         self.args = []
         if defaultsFile:
@@ -67,7 +66,9 @@ class Pyliquibase():
         self.liquibase_internal_lib_dir: str = self.liquibase_internal_dir + "/lib"
 
         # if liquibase directory not found download liquibase from Github and extract it under the directory
-        if not liquibaseDir:
+        if os.path.exists(self.liquibase_dir):
+            self.log.debug("Liquibase %s found, skipping download..." % str(self.liquibase_dir))
+        else:
             self._download_liquibase()
 
         self.cli = self._cli()
@@ -187,13 +188,10 @@ class Pyliquibase():
         """ If self.liquibase_dir not found it downloads liquibase from Github and extracts it under self.liquibase_dir
         :return: 
         """
-        if os.path.exists(self.liquibase_dir):
-            self.log.debug("Liquibase version %s found, skipping download..." % str(self.version))
-        else:
-            _file = LIQUIBASE_ZIP_FILE.format(self.version)
-            self.log.warning("Downloading Liquibase version: %s ...", self.version)
-            self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
-                                   destination=self.liquibase_dir)
+        _file = LIQUIBASE_ZIP_FILE.format(self.version)
+        self.log.warning("Downloading Liquibase version: %s ...", self.version)
+        self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
+                               destination=self.liquibase_dir)
 
     def download_additional_java_library(self, url: str, destination_dir: str = None):
         """
