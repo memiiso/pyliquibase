@@ -10,16 +10,6 @@ from urllib.parse import urlparse
 
 from pkg_resources import resource_filename
 
-#####  loggger
-log = logging.getLogger(name="pyliquibase")
-log.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-log.addHandler(handler)
-
-#####
 
 DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
@@ -46,6 +36,7 @@ class Pyliquibase():
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
 
+        self._log = None
         # if liquibaseDir is provided then switch to user provided liquibase.
         if liquibaseDir:
             self.liquibase_dir: str = liquibaseDir.rstrip("/")
@@ -81,6 +72,18 @@ class Pyliquibase():
 
         self.cli = self._cli()
 
+    @property
+    def log(self):
+        if not self._log:
+            self._log = logging.getLogger("pyliquibase")
+            self._log.setLevel(logging.INFO)
+            handler = logging.StreamHandler(sys.stdout)
+            handler.setLevel(logging.INFO)
+            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            self._log.addHandler(handler)
+        return self._log
+
     def _cli(self):
         ##### jnius
         import jnius_config
@@ -100,10 +103,10 @@ class Pyliquibase():
         if not jnius_config.vm_running:
             jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
         else:
-            log.warning(
+            self.log.warning(
                 "VM is already running, can't set classpath/options! classpath: %s" % jnius_config.get_classpath())
 
-        log.debug("classpath: %s" % jnius_config.get_classpath())
+        self.log.debug("classpath: %s" % jnius_config.get_classpath())
 
         from jnius import JavaClass, MetaJavaClass, JavaMethod
         #####
@@ -116,8 +119,8 @@ class Pyliquibase():
         return LiquibaseCommandLine()
 
     def execute(self, *arguments: str):
-        log.warning("Current working dir is %s" % pathlib.Path.cwd())
-        log.debug("Executing liquibase %s" % list(arguments))
+        self.log.warning("Current working dir is %s" % pathlib.Path.cwd())
+        self.log.debug("Executing liquibase %s" % list(arguments))
         rc = self.cli.execute(self.args + list(arguments))
         if rc:
             raise RuntimeError("Liquibase execution failed with exit code:%s" % rc)
@@ -137,7 +140,7 @@ class Pyliquibase():
 
         param: tag: Name of a tag in the changelog.
         """
-        log.debug("Updating to tag: %s" % tag)
+        self.log.debug("Updating to tag: %s" % tag)
         self.execute("update-to-tag", tag)
 
     def validate(self):
@@ -147,17 +150,17 @@ class Pyliquibase():
         self.execute("status")
 
     def rollback(self, tag):
-        log.debug("Rolling back to tag:%s" % tag)
+        self.log.debug("Rolling back to tag:%s" % tag)
         self.execute("rollback", tag)
 
     def rollback_to_datetime(self, datetime):
-        log.debug("Rolling back to %s" % str(datetime))
+        self.log.debug("Rolling back to %s" % str(datetime))
         self.execute("rollbackToDate", datetime)
 
     def changelog_sync(self):
         """Executes the changelog-sync Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/changelog-sync.html>`_.
         """
-        log.debug("Marking all undeployed changes as executed in database.")
+        self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("changelog-sync")
 
     def changelog_sync_to_tag(self, tag: str):
@@ -165,19 +168,19 @@ class Pyliquibase():
 
         param: tag: Name of a tag in the changelog.
         """
-        log.debug("Marking all undeployed changes as executed up to tag %s in database." % tag)
+        self.log.debug("Marking all undeployed changes as executed up to tag %s in database." % tag)
         self.execute("changelog-sync-to-tag", tag)
 
     def clear_checksums(self):
         """Executes the clear-checksums Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/clear-checksums.html>`_.
         """
-        log.debug("Marking all undeployed changes as executed in database.")
+        self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("clear-checksums")
 
     def release_locks(self):
         """Executes the release-locks Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/release-locks.html>`_.
         """
-        log.debug("Marking all undeployed changes as executed in database.")
+        self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("release-locks")
 
     def _download_liquibase(self) -> None:
@@ -185,10 +188,10 @@ class Pyliquibase():
         :return: 
         """
         if os.path.exists(self.liquibase_dir):
-            log.debug("Liquibase version %s found, skipping download..." % str(self.version))
+            self.log.debug("Liquibase version %s found, skipping download..." % str(self.version))
         else:
             _file = LIQUIBASE_ZIP_FILE.format(self.version)
-            log.warning("Downloading Liquibase version: %s ...", self.version)
+            self.log.warning("Downloading Liquibase version: %s ...", self.version)
             self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
                                    destination=self.liquibase_dir)
 
@@ -208,9 +211,9 @@ class Pyliquibase():
         destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
         destination_file = "%s/%s" % (destination_dir, lib_file_name)
         if pathlib.Path(destination_file).exists():
-            log.info("File already available skipping download: %s", destination_file)
+            self.log.info("File already available skipping download: %s", destination_file)
         else:
-            log.info("Downloading file: %s to %s", url, destination_file)
+            self.log.info("Downloading file: %s to %s", url, destination_file)
             self._download_file(url=url, destination=destination_file)
             with zipfile.ZipFile(destination_file, 'r') as zip_ref:
                 zip_ref.extractall(destination_dir)
@@ -222,10 +225,10 @@ class Pyliquibase():
         :return:
         """
         with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=False) as tmpfile:
-            log.info("Downloading %s to %s" % (url, destination))
+            self.log.info("Downloading %s to %s" % (url, destination))
             self._download_file(url, tmpfile.name)
 
-            log.info("Extracting to %s" % (destination))
+            self.log.info("Extracting to %s" % (destination))
             with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
                 zip_ref.extractall(destination)
         os.unlink(tmpfile.name)
@@ -239,7 +242,7 @@ class Pyliquibase():
         try:
             request.urlretrieve(url, destination)
         except Exception as e:
-            log.error("Failed to download %s" % url)
+            self.log.error("Failed to download %s" % url)
             raise e
 
 
