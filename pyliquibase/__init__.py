@@ -180,7 +180,7 @@ class Pyliquibase():
         self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
                                destination=self.liquibase_dir)
 
-    def download_additional_java_library(self, url: str, destination_dir: str = None):
+    def download_additional_java_library(self, url: str, destination_dir: str = None, override=False):
         """
         Downloads java library file from given url and saves to destination directory. If file already exists it skips the download.
         :param url: url to java library {jar,zip} file, http:xyz.com/mylibrary.jar, http:xyz.com/mylibrary.zip
@@ -190,18 +190,21 @@ class Pyliquibase():
         _url = urlparse(url)
         lib_file_name: str = os.path.basename(_url.path)
 
-        if not (lib_file_name.lower().endswith('.zip') or lib_file_name.lower().endswith('.jar')):
-            raise RuntimeError("Unexpected url, Expecting link to a `**.jar` or `**.zip` file!")
-
         destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
         destination_file = "%s/%s" % (destination_dir, lib_file_name)
-        if pathlib.Path(destination_file).exists():
+        if override is False and pathlib.Path(destination_file).exists():
             self.log.info("File already available skipping download: %s", destination_file)
-        else:
+            return
+
+        if lib_file_name.lower().endswith('.zip'):
+            self.log.info("Downloading file: %s to %s", url, destination_file)
+            self._download_zipfile(url=url, destination=destination_dir)
+
+        elif lib_file_name.lower().endswith('.jar'):
             self.log.info("Downloading file: %s to %s", url, destination_file)
             self._download_file(url=url, destination=destination_file)
-            with zipfile.ZipFile(destination_file, 'r') as zip_ref:
-                zip_ref.extractall(destination_dir)
+        else:
+            raise RuntimeError("Unexpected url, Expecting link to a `**.jar` or `**.zip` file!")
 
     def _download_zipfile(self, url: str, destination: str) -> None:
         """downloads zip file from given url and extract to destination folder
