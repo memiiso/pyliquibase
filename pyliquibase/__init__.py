@@ -193,7 +193,8 @@ class Pyliquibase():
 
         elif destination_file.suffix.lower().endswith('.jar'):
             self.log.info("Downloading file: %s to %s", url, destination_file.as_posix())
-            self._download_file(url=url, destination=destination_file.as_posix())
+            self._download_file(url=url,
+                                destination=destination_file.as_posix())
         else:
             raise RuntimeError("Unexpected url, Expecting link to a `**.jar` or `**.zip` file!")
 
