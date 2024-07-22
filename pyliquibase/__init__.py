@@ -6,13 +6,11 @@ import sys
 import tempfile
 import zipfile
 from urllib import request
-from urllib.parse import urlparse
 
 from pkg_resources import resource_filename
 
 DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
-LIQUIBASE_ZIP_FILE: str = "liquibase-{}.zip"
 LIQUIBASE_DIR: str = "liquibase-{}"
 
 
@@ -54,9 +52,11 @@ class Pyliquibase():
 
         # if liquibase directory not found download liquibase from Github and extract it under the directory
         if os.path.exists(self.liquibase_dir) and any(pathlib.Path(self.liquibase_dir).iterdir()):
-            self.log.debug("Liquibase %s found, skipping download..." % str(self.liquibase_dir))
+            self.log.debug("Liquibase %s found" % str(self.liquibase_dir))
         else:
-            self._download_liquibase()
+            self.log.warning("Downloading Liquibase version: %s ...", self.version)
+            self.download_additional_java_library(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
+                                                  destination_dir=self.liquibase_dir)
 
         self.cli = self._cli()
 
@@ -171,44 +171,40 @@ class Pyliquibase():
         self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("release-locks")
 
-    def _download_liquibase(self) -> None:
-        """ If self.liquibase_dir not found it downloads liquibase from Github and extracts it under self.liquibase_dir
-        :return: 
-        """
-        _file = LIQUIBASE_ZIP_FILE.format(self.version)
-        self.log.warning("Downloading Liquibase version: %s ...", self.version)
-        self._download_zipfile(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
-                               destination=self.liquibase_dir)
-
-    def download_additional_java_library(self, url: str, destination_dir: str = None):
+    def download_additional_java_library(self, url: str, destination_dir: str = None, override=False):
         """
         Downloads java library file from given url and saves to destination directory. If file already exists it skips the download.
         :param url: url to java library {jar,zip} file, http:xyz.com/mylibrary.jar, http:xyz.com/mylibrary.zip
         :param destination_dir: Optional, download destination. example: /mdirectory1/mydirectory2/libs/
         :return: None
         """
-        _url = urlparse(url)
-        lib_file_name: str = os.path.basename(_url.path)
+        file_name: str = os.path.basename(url)
+        destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
+        destination_file = pathlib.Path(destination_dir).joinpath(file_name)
 
-        if not (lib_file_name.lower().endswith('.zip') or lib_file_name.lower().endswith('.jar')):
+        if override is False and destination_file.exists():
+            self.log.info("File already available skipping download: %s", destination_file.as_posix())
+            return
+
+        if destination_file.suffix.lower().endswith('.zip'):
+            self._download_zipfile(url=url,
+                                   destination=destination_file.parent.as_posix(),
+                                   file_name=destination_file.as_posix())
+
+        elif destination_file.suffix.lower().endswith('.jar'):
+            self.log.info("Downloading file: %s to %s", url, destination_file.as_posix())
+            self._download_file(url=url,
+                                destination=destination_file.as_posix())
+        else:
             raise RuntimeError("Unexpected url, Expecting link to a `**.jar` or `**.zip` file!")
 
-        destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
-        destination_file = "%s/%s" % (destination_dir, lib_file_name)
-        if pathlib.Path(destination_file).exists():
-            self.log.info("File already available skipping download: %s", destination_file)
-        else:
-            self.log.info("Downloading file: %s to %s", url, destination_file)
-            self._download_file(url=url, destination=destination_file)
-            with zipfile.ZipFile(destination_file, 'r') as zip_ref:
-                zip_ref.extractall(destination_dir)
-
-    def _download_zipfile(self, url: str, destination: str) -> None:
+    def _download_zipfile(self, url: str, destination: str, file_name: str) -> None:
         """downloads zip file from given url and extract to destination folder
         :param url:
         :param destination:
         :return:
         """
+        zipfile_dest = pathlib.Path(destination).joinpath(file_name)
         with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=False) as tmpfile:
             self.log.info("Downloading %s to %s" % (url, destination))
             self._download_file(url, tmpfile.name)
@@ -216,7 +212,7 @@ class Pyliquibase():
             self.log.info("Extracting to %s" % (destination))
             with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
                 zip_ref.extractall(destination)
-        os.unlink(tmpfile.name)
+        os.replace(src=tmpfile.name, dst=zipfile_dest)
 
     def _download_file(self, url: str, destination: str) -> None:
         """downloads file from given url and saves to destination path
