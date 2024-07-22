@@ -187,7 +187,6 @@ class Pyliquibase():
             return
 
         if destination_file.suffix.lower().endswith('.zip'):
-            self.log.info("Downloading file: %s to %s", url, destination_file.as_posix())
             self._download_zipfile(url=url,
                                    destination=destination_file.parent.as_posix(),
                                    file_name=destination_file.as_posix())
