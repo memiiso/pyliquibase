@@ -18,7 +18,7 @@ LIQUIBASE_DIR: str = "liquibase-{}"
 
 class Pyliquibase():
 
-    def __init__(self, defaultsFile: str,
+    def __init__(self, defaultsFile: str = None,
                  liquibaseDir: str = None,
                  jdbcDriversDir: str = None,
                  additionalClasspath: str = None,
@@ -233,12 +233,9 @@ class Pyliquibase():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--defaultsFile', type=str, default="liquibase.properties",
-                        help='Relative path to liquibase.properties file'
-                        )
     _args, args = parser.parse_known_args()
 
-    pl = Pyliquibase(defaultsFile=_args.defaultsFile)
+    pl = Pyliquibase()
     pl.execute(*args)
 
 
