@@ -65,11 +65,12 @@ class Pyliquibase():
         if not self._log:
             self._log = logging.getLogger("pyliquibase")
             self._log.setLevel(logging.INFO)
-            handler = logging.StreamHandler(sys.stdout)
-            handler.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            self._log.addHandler(handler)
+            if not self._log.hasHandlers():
+                handler = logging.StreamHandler(sys.stdout)
+                handler.setLevel(logging.INFO)
+                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                self._log.addHandler(handler)
         return self._log
 
     def _cli(self):
