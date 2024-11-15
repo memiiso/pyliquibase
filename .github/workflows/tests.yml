@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
-        liquibase-version: [ "4.9.0", "4.10.0", "4.11.0", "4.21.1", "4.23.2", "4.24.0" ]
+        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        liquibase-version: [ "4.11.0", "4.24.0", "4.30.0" ]
 
     steps:
       - uses: actions/checkout@v4
