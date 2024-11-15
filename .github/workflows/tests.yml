@@ -29,21 +29,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           liquibase-version: ${{ matrix.liquibase-version }}
-      - name: Build & Install
+      - name: Build & Install & Test
         env:
           TEST_LIQUIBASE_VERSION: ${{ matrix.liquibase-version }}
         run: |
           python3 --version
-          python3 -m pip install coverage pylint pytest
+          python3 -m pip install coverage pylint pytest setuptools
           python3 -m compileall -f pyliquibase setup.py
           python3 setup.py -q install --user
           python3 -m coverage report -m ./pyliquibase/*.py setup.py
           python3 -m coverage run --source=./tests/ -m unittest discover -s tests/
           python3 -m pylint pyliquibase setup.py
-#      - name: Test with Unittest
-#        run: |
-#          python3 -m coverage run --source=./tests/ -m unittest discover -s tests/
-#          python3 setup.py -q install --user
-#          bash tests/test_pyliquibase_version.sh
-#          cd tests
-#          pyliquibase --defaultsFile=resources/liquibase.properties updateSQL
