@@ -45,15 +45,16 @@ class TestPyliquibase(TestCase):
         self.assertTrue(True)
 
     def test_exception(self):
-        lb = Pyliquibase(
-            defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase-fail.properties")
+        lb = Pyliquibase(version=self.TEST_LIQUIBASE_VERSION,
+                         defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase-fail.properties")
         try:
             lb.status()
         except Exception as e:
             self.assertTrue("Liquibase execution failed" in str(e))
 
     def test_download_additional_java_library(self):
-        lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
+        lb = Pyliquibase(version=self.TEST_LIQUIBASE_VERSION,
+                         defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
         lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.11.0/liquibase-snowflake-4.11.0.jar")
         # test re downloading succeeds
         lb.download_additional_java_library(url="https://github.com/liquibase/liquibase-snowflake/releases/download/liquibase-snowflake-4.11.0/liquibase-snowflake-4.11.0.jar")
@@ -63,7 +64,8 @@ class TestPyliquibase(TestCase):
         lb.download_additional_java_library(url="https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.33/snowflake-jdbc-3.13.33.jar")
 
     def test_download_additional_zip_library(self):
-        lb = Pyliquibase(defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
+        lb = Pyliquibase(version=self.TEST_LIQUIBASE_VERSION,
+                         defaultsFile=os.path.dirname(os.path.realpath(__file__)) + "/resources/liquibase.properties")
         # download Bigquery jdbc
         lb.download_additional_java_library(
             url="https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.3.3.1004.zip")
