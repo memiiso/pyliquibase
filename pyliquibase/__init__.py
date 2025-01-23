@@ -2,25 +2,59 @@ import argparse
 import logging
 import os
 import pathlib
+import shutil
 import sys
 import tempfile
 import zipfile
 from urllib import request
 
 from pkg_resources import resource_filename
+from tqdm import tqdm
 
 DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
 LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
 LIQUIBASE_DIR: str = "liquibase-{}"
 
 
-class Pyliquibase():
+class DownloadProgressBar(tqdm):
+    """Provides `update_to(n)` which uses `tqdm.update(delta_n)`."""
 
-    def __init__(self, defaultsFile: str = None,
-                 liquibaseDir: str = None,
-                 jdbcDriversDir: str = None,
-                 additionalClasspath: str = None,
-                 version: str = DEFAULT_LIQUIBASE_VERSION):
+    def update_to(self, b=1, bsize=1, tsize=None):
+        """
+        b  : int, optional
+            Number of blocks transferred so far [default: 1].
+        bsize  : int, optional
+            Size of each block (in tqdm units) [default: 1].
+        tsize  : int, optional
+            Total size (in tqdm units). If [default: None] remains unchanged.
+        """
+        if tsize is not None:
+            self.total = tsize
+        return self.update(b * bsize - self.n)  # also sets self.n = b * bsize
+
+
+class LoggerClass:
+    def __init__(self):
+        self._log = None
+
+    @property
+    def log(self):
+        if not self._log:
+            self._log = logging.getLogger("pyliquibase")
+            self._log.setLevel(logging.INFO)
+            if not self._log.hasHandlers():
+                handler = logging.StreamHandler(sys.stdout)
+                handler.setLevel(logging.INFO)
+                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                self._log.addHandler(handler)
+        return self._log
+
+
+class Pyliquibase(LoggerClass):
+
+    def __init__(self, defaultsFile: str = None, liquibaseDir: str = None, jdbcDriversDir: str = None,
+                 additionalClasspath: str = None, version: str = DEFAULT_LIQUIBASE_VERSION):
         """
 
         :param defaultsFile: pyliquibase defaults file
@@ -29,7 +63,7 @@ class Pyliquibase():
         :param additionalClasspath: additional classpath to import java libraries and liquibase extensions
         """
 
-        self._log = None
+        super().__init__()
         # if liquibaseDir is provided then switch to user provided liquibase.
         self.version: str = version if version else DEFAULT_LIQUIBASE_VERSION
         self.liquibase_dir: str = liquibaseDir.rstrip("/") if liquibaseDir else resource_filename(__package__,
@@ -59,19 +93,6 @@ class Pyliquibase():
                                                   destination_dir=self.liquibase_dir)
 
         self.cli = self._cli()
-
-    @property
-    def log(self):
-        if not self._log:
-            self._log = logging.getLogger("pyliquibase")
-            self._log.setLevel(logging.INFO)
-            if not self._log.hasHandlers():
-                handler = logging.StreamHandler(sys.stdout)
-                handler.setLevel(logging.INFO)
-                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-                handler.setFormatter(formatter)
-                self._log.addHandler(handler)
-        return self._log
 
     def _cli(self):
         ##### jnius
@@ -206,14 +227,14 @@ class Pyliquibase():
         :return:
         """
         zipfile_dest = pathlib.Path(destination).joinpath(file_name)
-        with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=False) as tmpfile:
-            self.log.info("Downloading %s to %s" % (url, destination))
+        with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=True) as tmpfile:
+            self.log.info(f"Downloading {url} to {destination}")
             self._download_file(url, tmpfile.name)
 
-            self.log.info("Extracting to %s" % (destination))
-            with zipfile.ZipFile(tmpfile, 'r') as zip_ref:
+            self.log.info(f"Extracting {tmpfile.name} to {destination}")
+            with zipfile.ZipFile(tmpfile.name, 'r') as zip_ref:
                 zip_ref.extractall(destination)
-        os.replace(src=tmpfile.name, dst=zipfile_dest)
+            shutil.copy(src=tmpfile.name, dst=zipfile_dest)
 
     def _download_file(self, url: str, destination: str) -> None:
         """downloads file from given url and saves to destination path
@@ -221,12 +242,10 @@ class Pyliquibase():
         :param destination: destination path including filename
         :return: 
         """
-        try:
-            request.urlretrieve(url, destination)
-        except Exception as e:
-            self.log.error("Failed to download %s" % url)
-            raise e
-
+        with DownloadProgressBar(unit='B', unit_scale=True, unit_divisor=1024, miniters=1,
+                                 desc=url.split('/')[-1]) as t:
+            request.urlretrieve(url, filename=destination, reporthook=t.update_to)
+            t.total = t.n
 
 def main():
     parser = argparse.ArgumentParser()
