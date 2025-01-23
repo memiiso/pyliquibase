@@ -7,3 +7,4 @@ disable=
     W1201, # Specify string format arguments as logging function parameters (logging-not-lazy)
     W0703, # Catching too general exception Exception (broad-except)
     W0212, #: Access to a protected member
+    logging-fstring-interpolation,
