@@ -8,15 +8,11 @@ A Python module to use [liquibase](http://www.liquibase.org/) in python, using t
 For further details on python-java integration [please see here](#python-java-integration)
 
 ## Installation
+Python-Java integration requires a Java Development Kit (JDK). Ensure a JDK is installed on your operating system.
 
 install:
 ```shell
 pip install pyliquibase
-```
-
-install from github:
-```shell
-pip install https://github.com/memiiso/pyliquibase/archive/master.zip --upgrade --user
 ```
 
 ## How to Use
@@ -54,10 +50,10 @@ if __name__ == '__main__':
 
 ## Python Java Integration
 
-Python library is based on `LiquibaseCommandLine` Python class. It is reflection of Java `LiquibaseCommandLine` class.
-liquibase calls are passed to Java `LiquibaseCommandLine.execute(liquibaseargs)` method.
+This Python library integrates with Java using the `LiquibaseCommandLine` class.  Our Python `LiquibaseCommandLine` class acts as a reflection of the Java counterpart, passing Liquibase calls to the Java `LiquibaseCommandLine.execute(liquibaseargs)` method.
 
-[Pyjnius](https://github.com/kivy/pyjnius) is a Python library for accessing Java classes. It either starts a new JVM inside the process, or retrieves the already surrounding JVM. To read more on pyjnius please see https://pyjnius.readthedocs.io/en/latest/
+This integration leverages [Pyjnius](https://github.com/kivy/pyjnius), a Python library for accessing Java classes. Pyjnius either starts a new Java Virtual Machine (JVM) within the current process or connects to an existing JVM.  For more information on Pyjnius, please refer to their documentation: https://pyjnius.readthedocs.io/en/latest/.
+
 ```python
 class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
     __javaclass__ = 'liquibase/integration/commandline/LiquibaseCommandLine'
