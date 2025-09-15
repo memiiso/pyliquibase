@@ -24,6 +24,6 @@ setup(
     include_package_data=True,
     license="Apache License 2.0",
     test_suite='tests',
-    install_requires=["pyjnius~=1.6.1", "tqdm~=4.67.1"],
+    install_requires=["pyjnius>=1.6.1,<1.8.0", "tqdm~=4.67.1"],
     python_requires='>=3.8',
 )
