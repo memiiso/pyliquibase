@@ -6,9 +6,9 @@ import shutil
 import sys
 import tempfile
 import zipfile
+from importlib import resources
 from urllib import request
 
-from pkg_resources import resource_filename
 from tqdm import tqdm
 
 DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
@@ -66,9 +66,12 @@ class Pyliquibase(LoggerClass):
         super().__init__()
         # if liquibaseDir is provided then switch to user provided liquibase.
         self.version: str = version if version else DEFAULT_LIQUIBASE_VERSION
-        self.liquibase_dir: str = liquibaseDir.rstrip("/") if liquibaseDir else resource_filename(__package__,
-                                                                                                  LIQUIBASE_DIR.format(
-                                                                                                      self.version))
+        if liquibaseDir:
+            self.liquibase_dir: str = liquibaseDir.rstrip("/")
+        else:
+            resource_path_relative = LIQUIBASE_DIR.format(self.version)
+            resource_path_object = resources.files(__package__) / resource_path_relative
+            self.liquibase_dir: str = str(resource_path_object)
 
         self.args = []
         if defaultsFile:
