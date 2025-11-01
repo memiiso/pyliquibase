@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyliquibase"
+version = "2.5.0"
+authors = [
+    { name = "Memiiso Organization" },
+]
+description = "Python liquibase"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["liquibase"]
+license = { text = "Apache License 2.0" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pyjnius~=1.7.0",
+    "tqdm~=4.67.1"
+]
+
+[tool.setuptools]
+include-package-data = true
+packages = ["pyliquibase"]
+
+[project.scripts]
+pyliquibase = "pyliquibase:main"
+
+[project.urls]
+"Homepage" = "https://github.com/memiiso/pyliquibase"
+"Download" = "https://github.com/memiiso/pyliquibase/archive/master.zip"
+
