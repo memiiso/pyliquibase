@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import pathlib
+from pathlib import Path
 import shutil
 import sys
 import tempfile
@@ -12,7 +13,9 @@ from urllib import request
 from tqdm import tqdm
 
 DEFAULT_LIQUIBASE_VERSION: str = "4.21.1"
-LIQUIBASE_ZIP_URL: str = "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
+LIQUIBASE_ZIP_URL: str = (
+    "https://github.com/liquibase/liquibase/releases/download/v{}/liquibase-{}.zip"
+)
 LIQUIBASE_DIR: str = "liquibase-{}"
 
 
@@ -45,16 +48,23 @@ class LoggerClass:
             if not self._log.hasHandlers():
                 handler = logging.StreamHandler(sys.stdout)
                 handler.setLevel(logging.INFO)
-                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+                formatter = logging.Formatter(
+                    "%(asctime)s - %(levelname)s - %(message)s"
+                )
                 handler.setFormatter(formatter)
                 self._log.addHandler(handler)
         return self._log
 
 
 class Pyliquibase(LoggerClass):
-
-    def __init__(self, defaultsFile: str = None, liquibaseDir: str = None, jdbcDriversDir: str = None,
-                 additionalClasspath: str = None, version: str = DEFAULT_LIQUIBASE_VERSION):
+    def __init__(
+        self,
+        defaultsFile: str = None,
+        liquibaseDir: str = None,
+        jdbcDriversDir: str = None,
+        additionalClasspath: str = None,
+        version: str = DEFAULT_LIQUIBASE_VERSION,
+    ):
         """
 
         :param defaultsFile: pyliquibase defaults file
@@ -75,37 +85,76 @@ class Pyliquibase(LoggerClass):
 
         self.args = []
         if defaultsFile:
-            if not pathlib.Path.cwd().joinpath(defaultsFile).is_file() and not pathlib.Path(defaultsFile).is_file():
+            if (
+                not pathlib.Path.cwd().joinpath(defaultsFile).is_file()
+                and not pathlib.Path(defaultsFile).is_file()
+            ):
                 raise FileNotFoundError("defaultsFile not found! %s" % defaultsFile)
 
             self.args.append("--defaults-file=%s" % defaultsFile)
 
-        self.additional_classpath: str = additionalClasspath.rstrip('/') if additionalClasspath else None
+        self.additional_classpath: str = (
+            additionalClasspath.rstrip("/") if additionalClasspath else None
+        )
         # if jdbcDriversDir is provided then use user provided jdbc driver libraries
-        self.jdbc_drivers_dir: str = jdbcDriversDir.rstrip("/") if jdbcDriversDir else None
+        self.jdbc_drivers_dir: str = (
+            jdbcDriversDir.rstrip("/") if jdbcDriversDir else None
+        )
         self.liquibase_lib_dir: str = self.liquibase_dir + "/lib"
         self.liquibase_internal_dir: str = self.liquibase_dir + "/internal"
         self.liquibase_internal_lib_dir: str = self.liquibase_internal_dir + "/lib"
 
         # if liquibase directory not found download liquibase from Github and extract it under the directory
-        if os.path.exists(self.liquibase_dir) and any(pathlib.Path(self.liquibase_dir).iterdir()):
+        if os.path.exists(self.liquibase_dir) and any(
+            pathlib.Path(self.liquibase_dir).iterdir()
+        ):
             self.log.debug("Liquibase %s found" % str(self.liquibase_dir))
         else:
             self.log.warning("Downloading Liquibase version: %s ...", self.version)
-            self.download_additional_java_library(url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
-                                                  destination_dir=self.liquibase_dir)
+            self.download_additional_java_library(
+                url=LIQUIBASE_ZIP_URL.format(self.version, self.version),
+                destination_dir=self.liquibase_dir,
+            )
 
         self.cli = self._cli()
 
+    def _start_jvm(self, classpath):
+        import jpype
+
+        ################# STEP 2  INIT JPYPE, JVM ####################
+        # Start JVM with the classpaths
+        if not jpype.isJVMStarted():
+            jvm_path = jpype.getDefaultJVMPath()
+
+            # jpype.getDefaultJVMPath() returns bytes in some versions/OS
+            if isinstance(jvm_path, bytes):
+                jvm_path = jvm_path.decode("utf-8")
+
+            # Fix for macOS where getDefaultJVMPath might return the Home directory instead of the lib
+            if sys.platform == "darwin" and Path(jvm_path).is_dir():
+                # Try common locations specifically for macOS/Corretto
+                potential_paths = [
+                    Path(jvm_path) / "lib" / "server" / "libjvm.dylib",
+                    Path(jvm_path) / "lib" / "libjvm.dylib",
+                ]
+                for p in potential_paths:
+                    if p.exists():
+                        jvm_path = str(p)
+                        break
+
+            jpype.startJVM(jvm_path, classpath=classpath, convertStrings=True)
+            print("JVM started.")
+
     def _cli(self):
-        ##### jnius
-        import jnius_config
+        ##### jpype
+        import jpype
 
         LIQUIBASE_CLASSPATH: list = [
             self.liquibase_dir + "/*",
             self.liquibase_lib_dir + "/*",
             self.liquibase_internal_dir + "/*",
-            self.liquibase_internal_lib_dir + "/*"]
+            self.liquibase_internal_lib_dir + "/*",
+        ]
 
         if self.jdbc_drivers_dir:
             LIQUIBASE_CLASSPATH.append(self.jdbc_drivers_dir + "/*")
@@ -113,23 +162,16 @@ class Pyliquibase(LoggerClass):
         if self.additional_classpath:
             LIQUIBASE_CLASSPATH.append(self.additional_classpath + "/*")
 
-        if not jnius_config.vm_running:
-            jnius_config.add_classpath(*LIQUIBASE_CLASSPATH)
+        if not jpype.isJVMStarted():
+            # jpype.startJVM(classpath=LIQUIBASE_CLASSPATH, convertStrings=True)
+            self._start_jvm(classpath=LIQUIBASE_CLASSPATH)
         else:
-            self.log.warning(
-                "VM is already running, can't set classpath/options! classpath: %s" % jnius_config.get_classpath())
+            self.log.warning("VM is already running, can't set classpath/options!")
 
-        self.log.debug("classpath: %s" % jnius_config.get_classpath())
+        self.log.debug("classpath: %s" % str(LIQUIBASE_CLASSPATH))
 
-        from jnius import JavaClass, MetaJavaClass, JavaMethod
         #####
-        class LiquibaseCommandLine(JavaClass, metaclass=MetaJavaClass):
-            __javaclass__ = "liquibase/integration/commandline/LiquibaseCommandLine"
-
-            # methods
-            execute = JavaMethod("([Ljava/lang/String;)I")
-
-        return LiquibaseCommandLine()
+        return jpype.JClass("liquibase.integration.commandline.LiquibaseCommandLine")()
 
     def execute(self, *arguments: str):
         self.log.warning("Current working dir is %s" % pathlib.Path.cwd())
@@ -171,8 +213,7 @@ class Pyliquibase(LoggerClass):
         self.execute("rollbackToDate", datetime)
 
     def changelog_sync(self):
-        """Executes the changelog-sync Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/changelog-sync.html>`_.
-        """
+        """Executes the changelog-sync Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/changelog-sync.html>`_."""
         self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("changelog-sync")
 
@@ -181,22 +222,24 @@ class Pyliquibase(LoggerClass):
 
         param: tag: Name of a tag in the changelog.
         """
-        self.log.debug("Marking all undeployed changes as executed up to tag %s in database." % tag)
+        self.log.debug(
+            "Marking all undeployed changes as executed up to tag %s in database." % tag
+        )
         self.execute("changelog-sync-to-tag", tag)
 
     def clear_checksums(self):
-        """Executes the clear-checksums Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/clear-checksums.html>`_.
-        """
+        """Executes the clear-checksums Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/clear-checksums.html>`_."""
         self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("clear-checksums")
 
     def release_locks(self):
-        """Executes the release-locks Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/release-locks.html>`_.
-        """
+        """Executes the release-locks Liquibase maintenance command. `Reference Documentation <https://docs.liquibase.com/commands/maintenance/release-locks.html>`_."""
         self.log.debug("Marking all undeployed changes as executed in database.")
         self.execute("release-locks")
 
-    def download_additional_java_library(self, url: str, destination_dir: str = None, override=False):
+    def download_additional_java_library(
+        self, url: str, destination_dir: str = None, override=False
+    ):
         """
         Downloads java library file from given url and saves to destination directory. If file already exists it skips the download.
         :param url: url to java library {jar,zip} file, http:xyz.com/mylibrary.jar, http:xyz.com/mylibrary.zip
@@ -208,20 +251,28 @@ class Pyliquibase(LoggerClass):
         destination_file = pathlib.Path(destination_dir).joinpath(file_name)
 
         if override is False and destination_file.exists():
-            self.log.info("File already available skipping download: %s", destination_file.as_posix())
+            self.log.info(
+                "File already available skipping download: %s",
+                destination_file.as_posix(),
+            )
             return
 
-        if destination_file.suffix.lower().endswith('.zip'):
-            self._download_zipfile(url=url,
-                                   destination=destination_file.parent.as_posix(),
-                                   file_name=destination_file.as_posix())
+        if destination_file.suffix.lower().endswith(".zip"):
+            self._download_zipfile(
+                url=url,
+                destination=destination_file.parent.as_posix(),
+                file_name=destination_file.as_posix(),
+            )
 
-        elif destination_file.suffix.lower().endswith('.jar'):
-            self.log.info("Downloading file: %s to %s", url, destination_file.as_posix())
-            self._download_file(url=url,
-                                destination=destination_file.as_posix())
+        elif destination_file.suffix.lower().endswith(".jar"):
+            self.log.info(
+                "Downloading file: %s to %s", url, destination_file.as_posix()
+            )
+            self._download_file(url=url, destination=destination_file.as_posix())
         else:
-            raise RuntimeError("Unexpected url, Expecting link to a `**.jar` or `**.zip` file!")
+            raise RuntimeError(
+                "Unexpected url, Expecting link to a `**.jar` or `**.zip` file!"
+            )
 
     def _download_zipfile(self, url: str, destination: str, file_name: str) -> None:
         """downloads zip file from given url and extract to destination folder
@@ -230,12 +281,14 @@ class Pyliquibase(LoggerClass):
         :return:
         """
         zipfile_dest = pathlib.Path(destination).joinpath(file_name)
-        with tempfile.NamedTemporaryFile(suffix="_liquibase.zip", delete=True) as tmpfile:
+        with tempfile.NamedTemporaryFile(
+            suffix="_liquibase.zip", delete=True
+        ) as tmpfile:
             self.log.info(f"Downloading {url} to {destination}")
             self._download_file(url, tmpfile.name)
 
             self.log.info(f"Extracting {tmpfile.name} to {destination}")
-            with zipfile.ZipFile(tmpfile.name, 'r') as zip_ref:
+            with zipfile.ZipFile(tmpfile.name, "r") as zip_ref:
                 zip_ref.extractall(destination)
             shutil.copy(src=tmpfile.name, dst=zipfile_dest)
 
@@ -243,12 +296,18 @@ class Pyliquibase(LoggerClass):
         """downloads file from given url and saves to destination path
         :param url: url to file
         :param destination: destination path including filename
-        :return: 
+        :return:
         """
-        with DownloadProgressBar(unit='B', unit_scale=True, unit_divisor=1024, miniters=1,
-                                 desc=url.split('/')[-1]) as t:
+        with DownloadProgressBar(
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+            miniters=1,
+            desc=url.split("/")[-1],
+        ) as t:
             request.urlretrieve(url, filename=destination, reporthook=t.update_to)
             t.total = t.n
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -258,5 +317,5 @@ def main():
     pl.execute(*args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -219,3 +219,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/pyliquibase/liquibase-4.21.1/*
