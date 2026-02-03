@@ -20,15 +20,20 @@ jobs:
     strategy:
       matrix:
         python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        java-version: [ "11", "21" ]
         liquibase-version: [ "4.11.0", "4.24.0", "4.30.0" ]
 
     steps:
       - uses: actions/checkout@v6
+      - name: Set up Java ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          liquibase-version: ${{ matrix.liquibase-version }}
       - name: Build & Install & Test
         env:
           TEST_LIQUIBASE_VERSION: ${{ matrix.liquibase-version }}

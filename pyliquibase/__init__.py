@@ -2,12 +2,12 @@ import argparse
 import logging
 import os
 import pathlib
-from pathlib import Path
 import shutil
 import sys
 import tempfile
 import zipfile
 from importlib import resources
+from pathlib import Path
 from urllib import request
 
 from tqdm import tqdm
@@ -58,12 +58,12 @@ class LoggerClass:
 
 class Pyliquibase(LoggerClass):
     def __init__(
-        self,
-        defaultsFile: str = None,
-        liquibaseDir: str = None,
-        jdbcDriversDir: str = None,
-        additionalClasspath: str = None,
-        version: str = DEFAULT_LIQUIBASE_VERSION,
+            self,
+            defaultsFile: str = None,
+            liquibaseDir: str = None,
+            jdbcDriversDir: str = None,
+            additionalClasspath: str = None,
+            version: str = DEFAULT_LIQUIBASE_VERSION,
     ):
         """
 
@@ -86,8 +86,8 @@ class Pyliquibase(LoggerClass):
         self.args = []
         if defaultsFile:
             if (
-                not pathlib.Path.cwd().joinpath(defaultsFile).is_file()
-                and not pathlib.Path(defaultsFile).is_file()
+                    not pathlib.Path.cwd().joinpath(defaultsFile).is_file()
+                    and not pathlib.Path(defaultsFile).is_file()
             ):
                 raise FileNotFoundError("defaultsFile not found! %s" % defaultsFile)
 
@@ -106,7 +106,7 @@ class Pyliquibase(LoggerClass):
 
         # if liquibase directory not found download liquibase from Github and extract it under the directory
         if os.path.exists(self.liquibase_dir) and any(
-            pathlib.Path(self.liquibase_dir).iterdir()
+                pathlib.Path(self.liquibase_dir).iterdir()
         ):
             self.log.debug("Liquibase %s found" % str(self.liquibase_dir))
         else:
@@ -238,7 +238,7 @@ class Pyliquibase(LoggerClass):
         self.execute("release-locks")
 
     def download_additional_java_library(
-        self, url: str, destination_dir: str = None, override=False
+            self, url: str, destination_dir: str = None, override=False
     ):
         """
         Downloads java library file from given url and saves to destination directory. If file already exists it skips the download.
@@ -282,7 +282,7 @@ class Pyliquibase(LoggerClass):
         """
         zipfile_dest = pathlib.Path(destination).joinpath(file_name)
         with tempfile.NamedTemporaryFile(
-            suffix="_liquibase.zip", delete=True
+                suffix="_liquibase.zip", delete=True
         ) as tmpfile:
             self.log.info(f"Downloading {url} to {destination}")
             self._download_file(url, tmpfile.name)
@@ -299,11 +299,11 @@ class Pyliquibase(LoggerClass):
         :return:
         """
         with DownloadProgressBar(
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-            miniters=1,
-            desc=url.split("/")[-1],
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                miniters=1,
+                desc=url.split("/")[-1],
         ) as t:
             request.urlretrieve(url, filename=destination, reporthook=t.update_to)
             t.total = t.n
