@@ -1,21 +1,22 @@
-[![License](http://img.shields.io/:license-apache%202.0-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
-![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)
-[![Create Pypi Release](https://github.com/memiiso/pyliquibase/actions/workflows/release.yml/badge.svg)](https://github.com/memiiso/pyliquibase/actions/workflows/release.yml)
 # pyliquibase
 
 A Python module to use [liquibase](http://www.liquibase.org/) in python, using the Java Native Interface (JNI).
 
-For further details on python-java integration [please see here](#python-java-integration)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://memiiso.github.io/pyliquibase/)
+[![License](http://img.shields.io/:license-apache%202.0-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)
+[![Create Pypi Release](https://github.com/memiiso/pyliquibase/actions/workflows/release.yml/badge.svg)](https://github.com/memiiso/pyliquibase/actions/workflows/release.yml)
+
+For full documentation, please visit [https://memiiso.github.io/pyliquibase/](https://memiiso.github.io/pyliquibase/)
 
 ## Installation
-Python-Java integration requires a Java Development Kit (JDK). Ensure a JDK is installed on your operating system.
+Python-Java integration requires Java. Ensure Java is installed on your operating system.
 
-install:
 ```shell
 pip install pyliquibase
 ```
 
-## How to Use
+## Quick Start
 
 using command line:
 ```shell
