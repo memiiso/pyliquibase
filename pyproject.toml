@@ -20,7 +20,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "JPype1~=1.6.0",
+    "JPype1>=1.6,<1.8",
     "tqdm~=4.67.1"
 ]
 
