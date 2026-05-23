@@ -23,6 +23,8 @@ venv
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/$CACHE_FILE$
+.idea/**/copilot.data.migration.ask2agent.xml
 
 # Generated files
 .idea/**/contentModel.xml
@@ -44,14 +46,14 @@ venv
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
-# .idea/artifacts
-# .idea/compiler.xml
-# .idea/jarRepositories.xml
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
-# *.iml
-# *.ipr
+.idea/artifacts
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/modules.xml
+.idea/*.iml
+.idea/modules
+*.iml
+*.ipr
 
 # CMake
 cmake-build-*/
@@ -142,6 +144,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+.ruff_cache/
 
 # Translations
 *.mo
@@ -219,4 +222,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/pyliquibase/liquibase-4.21.1/*
+
+# Liquibase downloaded binaries (matching any version)
+/pyliquibase/liquibase-*/
