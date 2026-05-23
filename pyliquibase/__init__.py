@@ -250,6 +250,9 @@ class Pyliquibase(LoggerClass):
         destination_dir = destination_dir if destination_dir else self.liquibase_lib_dir
         destination_file = pathlib.Path(destination_dir).joinpath(file_name)
 
+        # Ensure that the destination directory exists before checking or writing
+        destination_file.parent.mkdir(parents=True, exist_ok=True)
+
         if override is False and destination_file.exists():
             self.log.info(
                 "File already available skipping download: %s",
