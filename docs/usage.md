@@ -24,7 +24,10 @@ from pyliquibase import Pyliquibase
 
 if __name__ == '__main__':
     # Initialize with a properties file
-    liquibase = Pyliquibase(defaultsFile="changelogs/liquibase.properties", logLevel="INFO")
+    liquibase = Pyliquibase(defaultsFile="changelogs/liquibase.properties")
+    
+    # Optionally add arguments such as log-level or log-file
+    liquibase.addarg("--log-level", "info")
     
     # Execute specific commands
     liquibase.status()

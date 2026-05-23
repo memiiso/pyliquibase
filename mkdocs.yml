@@ -1,6 +1,7 @@
 site_name: pyliquibase
 site_url: https://memiiso.github.io/pyliquibase
 repo_url: https://github.com/memiiso/pyliquibase
+repo_name: memiiso/pyliquibase
 edit_uri: edit/main/docs/
 
 theme:
@@ -27,6 +28,9 @@ theme:
     - toc.integrate
     - content.code.copy
     - content.tabs.link
+    - search.highlight
+    - search.share
+    - search.suggest
 
 nav:
   - Home: index.md
@@ -46,3 +50,8 @@ markdown_extensions:
   - abbr
   - toc:
       permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/memiiso/pyliquibase

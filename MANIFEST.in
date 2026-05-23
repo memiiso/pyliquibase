@@ -1,2 +1,2 @@
-recursive-include pyliquibase/liquibase *
+prune pyliquibase/liquibase-*
 recursive-include pyliquibase/jdbc-drivers *

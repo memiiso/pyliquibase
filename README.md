@@ -31,7 +31,10 @@ using python:
 from pyliquibase import Pyliquibase
 
 if __name__ == '__main__':
-    liquibase = Pyliquibase(defaultsFile="changelogs/liquibase.properties", logLevel="INFO")
+    liquibase = Pyliquibase(defaultsFile="changelogs/liquibase.properties")
+    # optionally, you can add log-level or other liquibase arguments:
+    # liquibase.addarg("--log-level", "info")
+
     # call execute with arguments
     liquibase.execute("status")
     liquibase.execute("rollback", "MyTag")
