@@ -24,7 +24,7 @@ jobs:
         liquibase-version: [ "4.11.0", "4.24.0", "4.30.0" ]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Java ${{ matrix.java-version }}
         uses: actions/setup-java@v5
         with:
