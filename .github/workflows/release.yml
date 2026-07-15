@@ -1,33 +1,85 @@
-name: Create Pypi Release
+name: Release
+
+# Tag-triggered release pipeline: build sdist + wheel, verify metadata, smoke-test
+# the wheel, then publish via PyPI Trusted Publishing (OIDC — no API tokens).
+#
+# Flow:
+#   - tag containing `rc` (e.g., `3.0.0rc1`) -> build + publish to TestPyPI (install rehearsal)
+#   - tag NOT containing `rc` (e.g., `3.0.0`) -> build + publish to PyPI (gated by the `pypi` environment)
 
 on:
   push:
     tags:
-      - '*.*.*'
+      - '**'
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Build & verify distributions
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8]
-
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install pypa/build
-        run: |
-          python -m pip install build --user
-      - name: Build a binary wheel and a source tarball
-        run: |
-          python -m build --sdist --wheel --outdir dist/ .
+          fetch-depth: 0 # full history for setuptools-scm to resolve tag version
 
-      - name: Publish to Pypi
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Smoke-test wheel install
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          /tmp/smoke/bin/pyliquibase --help
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI (rc tags)
+    needs: build
+    if: ${{ contains(github.ref_name, 'rc') }}
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write # OIDC trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish to PyPI (final tags)
+    needs: build
+    if: ${{ !contains(github.ref_name, 'rc') }}
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # OIDC trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
